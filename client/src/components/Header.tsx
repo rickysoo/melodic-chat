@@ -28,6 +28,17 @@ export default function Header({ onClearChat }: HeaderProps) {
     };
   }, []);
   
+  const handleClearChat = () => {
+    if (onClearChat) {
+      onClearChat();
+      toast({
+        title: "Chat history cleared",
+        description: "All chat messages have been deleted from this device.",
+        duration: 3000,
+      });
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-3">
@@ -37,13 +48,29 @@ export default function Header({ onClearChat }: HeaderProps) {
         </h1>
       </div>
       
-      {/* Offline indicator for PWA mode */}
-      {isPwa && !isOnline && (
-        <div className="flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
-          <WifiOff className="w-3 h-3 mr-1" />
-          Offline
-        </div>
-      )}
+      <div className="flex items-center space-x-3">
+        {/* Clear chat button */}
+        {onClearChat && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearChat}
+            className="text-gray-500 hover:text-gray-700 flex items-center"
+            title="Clear chat history"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Clear Chat</span>
+          </Button>
+        )}
+        
+        {/* Offline indicator for PWA mode */}
+        {isPwa && !isOnline && (
+          <div className="flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
+            <WifiOff className="w-3 h-3 mr-1" />
+            Offline
+          </div>
+        )}
+      </div>
     </header>
   );
 }
