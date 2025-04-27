@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   // State hooks first
-  const [model, setModel] = useState<string>("gpt-4o");
+  const [model, setModel] = useState<string>("gpt-4o-mini");
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [isMusicActive, setIsMusicActive] = useState(false);
   
@@ -62,7 +62,7 @@ export default function Home() {
 
   // Initialize on load
   useEffect(() => {
-    const savedModel = localStorage.getItem("melodic_model") || "gpt-4o";
+    const savedModel = localStorage.getItem("melodic_model") || "gpt-4o-mini";
     setModel(savedModel);
 
     // Start background music if enabled
