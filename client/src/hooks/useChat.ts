@@ -10,6 +10,11 @@ interface UseChatProps {
   onMessageReceived?: () => void;
 }
 
+// Type for the enhanced ChatResponse that includes sessionId
+interface EnhancedChatResponse extends ChatResponse {
+  sessionId: string;
+}
+
 // Maximum number of messages to store
 const MAX_STORED_MESSAGES = 50;
 
@@ -37,6 +42,25 @@ const saveMessagesToStorage = (messages: Message[]) => {
   }
 };
 
+// Helper function to load session ID from localStorage
+const loadSessionId = (): string | null => {
+  try {
+    return localStorage.getItem('melodic_session_id');
+  } catch (error) {
+    console.error('Failed to load session ID from localStorage:', error);
+    return null;
+  }
+};
+
+// Helper function to save session ID to localStorage
+const saveSessionId = (sessionId: string) => {
+  try {
+    localStorage.setItem('melodic_session_id', sessionId);
+  } catch (error) {
+    console.error('Failed to save session ID to localStorage:', error);
+  }
+};
+
 export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: UseChatProps) {
   // Initialize with messages from localStorage
   const [state, setState] = useState<ChatState>({
@@ -44,6 +68,9 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
     isTyping: false,
     error: null
   });
+  
+  // Load or initialize the session ID
+  const [sessionId, setSessionId] = useState<string | null>(loadSessionId());
 
   const sendMessage = useCallback(async (content: string) => {
     // Add user message to state
@@ -75,10 +102,17 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
       const response = await apiRequest('POST', '/api/chat', {
         message: content,
         apiKey: apiKey === "env" ? "use_env" : apiKey, // Signal server to use env variable
-        model
+        model,
+        sessionId: sessionId || undefined
       });
 
-      const data: ChatResponse = await response.json();
+      const data: EnhancedChatResponse = await response.json();
+      
+      // Save the session ID if we got one back
+      if (data.sessionId && (!sessionId || sessionId !== data.sessionId)) {
+        setSessionId(data.sessionId);
+        saveSessionId(data.sessionId);
+      }
       
       // Format the assistant response to include a musical note at the end
       let assistantContent = data.choices[0].message.content;
@@ -116,7 +150,7 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
         error: error instanceof Error ? error.message : 'Failed to send message'
       }));
     }
-  }, [apiKey, model, onMessageSent, onMessageReceived]);
+  }, [apiKey, model, onMessageSent, onMessageReceived, sessionId]);
 
   // Function to clear chat history
   const clearChatHistory = useCallback(() => {
