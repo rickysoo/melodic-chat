@@ -134,7 +134,7 @@ export default function Home() {
   return (
     <div className={`h-screen flex flex-col bg-background text-foreground overflow-hidden ${isPwa ? 'pwa-mode' : ''}`}>
       {/* Don't show header in PWA mode on mobile - header will be visible on larger screens */}
-      {!(isPwa && isMobile) && <Header onClearChat={clearChatHistory} />}
+      {!(isPwa && isMobile) && <Header onClearChat={clearChatHistory} onSearchResult={handleSendMessage} />}
       
       {/* Main chat container */}
       <main className={`flex-1 flex flex-col overflow-hidden relative ${isPwa && isMobile ? 'pt-2' : ''}`}>

@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import MelodicLogo from "./MelodicLogo";
 import { useIsPwa } from "@/hooks/use-mobile";
-import { WifiOff, Trash2 } from "lucide-react";
+import { WifiOff, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { WebSearchModal } from "./WebSearchModal";
 
 interface HeaderProps {
   onClearChat?: () => void;
+  onSearchResult?: (result: string) => void;
 }
 
-export default function Header({ onClearChat }: HeaderProps) {
+export default function Header({ onClearChat, onSearchResult }: HeaderProps) {
   const isPwa = useIsPwa();
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const { toast } = useToast();
   
   // Monitor online/offline status
@@ -49,6 +52,21 @@ export default function Header({ onClearChat }: HeaderProps) {
       </div>
       
       <div className="flex items-center space-x-3">
+        {/* Web search button - only show if we have the onSearchResult prop */}
+        {onSearchResult && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSearchModalOpen(true)}
+            className="text-gray-500 hover:text-gray-700 flex items-center"
+            title="Search the web"
+            disabled={!isOnline}
+          >
+            <Search className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Web Search</span>
+          </Button>
+        )}
+        
         {/* Clear chat button */}
         {onClearChat && (
           <Button
@@ -69,6 +87,15 @@ export default function Header({ onClearChat }: HeaderProps) {
             <WifiOff className="w-3 h-3 mr-1" />
             Offline
           </div>
+        )}
+        
+        {/* Web search modal */}
+        {onSearchResult && (
+          <WebSearchModal
+            isOpen={isSearchModalOpen}
+            onClose={() => setIsSearchModalOpen(false)}
+            onSearch={onSearchResult}
+          />
         )}
       </div>
     </header>
