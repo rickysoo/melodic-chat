@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Header from "@/components/Header";
 import MessageThread from "@/components/MessageThread";
 import ChatInput from "@/components/ChatInput";
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { useChat } from "@/hooks/useChat";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/useSounds";
@@ -132,36 +133,19 @@ export default function Home() {
 
   return (
     <div className={`h-screen flex flex-col bg-background text-foreground overflow-hidden ${isPwa ? 'pwa-mode' : ''}`}>
-      {/* Don't show header in PWA mode on mobile */}
+      {/* Don't show header in PWA mode on mobile - header will be visible on larger screens */}
       {!(isPwa && isMobile) && <Header />}
       
-      {/* PWA welcome message */}
-      {isPwa && messages.length === 0 && (
-        <div className="bg-blue-50 text-blue-700 p-3 m-2 rounded-lg text-sm">
-          <p className="font-semibold">Welcome to the Melodic app!</p>
-          <p>You're using the installed app version which works offline.</p>
-        </div>
-      )}
-      
-      {/* Install button (appears only when PWA can be installed) */}
-      {isInstallable && isMobile && (
-        <div className="bg-blue-500 text-white p-2 flex justify-between items-center">
-          <span>Install Melodic for offline use</span>
-          <button 
-            onClick={handleInstallClick}
-            className="bg-white text-blue-500 px-3 py-1 rounded-md font-medium"
-          >
-            Install
-          </button>
-        </div>
-      )}
-      
+      {/* Main chat container */}
       <main className={`flex-1 flex flex-col overflow-hidden relative ${isPwa && isMobile ? 'pt-2' : ''}`}>
         <MessageThread messages={messages} isTyping={isTyping} />
         <div ref={messageEndRef} />
         
         <ChatInput onSendMessage={handleSendMessage} disabled={isTyping} />
       </main>
+      
+      {/* PWA install prompt component - handles all installation UI */}
+      {!isPwa && <PwaInstallPrompt />}
     </div>
   );
 }

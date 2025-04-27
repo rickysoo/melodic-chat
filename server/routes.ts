@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 import path from "path";
 import express from "express";
+import { handlePerplexitySearch } from "./perplexity";
 
 const chatRequestSchema = z.object({
   message: z.string(),
@@ -82,6 +83,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Perplexity web search endpoint
+  app.post('/api/search', handlePerplexitySearch);
 
   const httpServer = createServer(app);
   return httpServer;
