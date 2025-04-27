@@ -81,10 +81,16 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
       timestamp: Date.now()
     };
 
+    // We need to update and get the latest messages synchronously
+    // to ensure we have the most current messages when sending the API request
+    let currentMessages: Message[] = [];
+    
     setState(prev => {
       const updatedMessages = [...prev.messages, userMessage];
       // Save to localStorage
       saveMessagesToStorage(updatedMessages);
+      // Update our local reference to the current messages
+      currentMessages = updatedMessages;
       return {
         ...prev,
         messages: updatedMessages,
@@ -98,12 +104,19 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
     }
 
     try {
-      // Send request to server
+      // Format conversation history for API (last 50 messages)
+      const formattedHistory = currentMessages.slice(-MAX_STORED_MESSAGES).map((msg: Message) => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      // Send request to server with conversation history
       const response = await apiRequest('POST', '/api/chat', {
         message: content,
         apiKey: apiKey === "env" ? "use_env" : apiKey, // Signal server to use env variable
         model,
-        sessionId: sessionId || undefined
+        sessionId: sessionId || undefined,
+        conversationHistory: formattedHistory
       });
 
       const data: EnhancedChatResponse = await response.json();

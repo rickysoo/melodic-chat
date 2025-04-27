@@ -12,7 +12,13 @@ const chatRequestSchema = z.object({
   message: z.string(),
   apiKey: z.string(),
   model: z.string().default("gpt-4o"),
-  sessionId: z.string().optional()
+  sessionId: z.string().optional(),
+  conversationHistory: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant']),
+      content: z.string()
+    })
+  ).optional()
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -40,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid request data", errors: validation.error.errors });
       }
       
-      let { message, apiKey, model, sessionId } = validation.data;
+      let { message, apiKey, model, sessionId, conversationHistory } = validation.data;
       
       // If the client is requesting to use the environment API key
       if (apiKey === "use_env") {
@@ -55,12 +61,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId = generateSessionId();
       }
       
-      // Send request to OpenAI with context management
+      // Send request to OpenAI with conversation history
       const response = await generateChatResponse({
         apiKey,
         message,
         model,
         sessionId,
+        conversationHistory,
         systemPrompt: "You are Melodic, a helpful, creative, and musically-inclined AI assistant. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. Format your responses with multiple paragraphs for better readability. Use markdown formatting like **bold**, *italic*, and bullet points where appropriate. Use emojis where appropriate, especially music-related ones."
       });
       
