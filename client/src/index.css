@@ -194,6 +194,48 @@
     overflow-x: auto;
     margin-bottom: 0.75rem;
   }
+  
+  /* PWA specific styles */
+  .pwa-mode {
+    /* Hide scrollbars in PWA mode */
+    -ms-overflow-style: none;  /* Internet Explorer and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  .pwa-mode::-webkit-scrollbar {
+    /* Hide scrollbars in PWA mode for Chrome/Safari */
+    display: none; 
+  }
+  
+  /* Prevent overscroll bounce effect in PWA mode */
+  .pwa-mode {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent text selection in PWA mode for better experience */
+  .pwa-mode * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Exception for input fields to allow text selection */
+  .pwa-mode input, 
+  .pwa-mode textarea {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+  
+  /* Fix for iOS safe areas */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .pwa-mode {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+  }
 }
 
 /* Font family definitions */

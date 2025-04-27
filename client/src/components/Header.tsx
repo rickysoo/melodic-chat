@@ -1,6 +1,26 @@
+import { useState, useEffect } from "react";
 import MelodicLogo from "./MelodicLogo";
+import { useIsPwa } from "@/hooks/use-mobile";
+import { WifiOff } from "lucide-react";
 
 export default function Header() {
+  const isPwa = useIsPwa();
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+  
   return (
     <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-3">
@@ -9,6 +29,14 @@ export default function Header() {
           Melodic
         </h1>
       </div>
+      
+      {/* Offline indicator for PWA mode */}
+      {isPwa && !isOnline && (
+        <div className="flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
+          <WifiOff className="w-3 h-3 mr-1" />
+          Offline
+        </div>
+      )}
     </header>
   );
 }
