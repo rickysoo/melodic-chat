@@ -91,8 +91,38 @@ export function useSounds() {
     return;
   }, []);
 
+  // Function to unlock audio on user interaction
+  const unlockAudioContext = useCallback(() => {
+    const context = initAudioContext();
+    if (context && context.state === 'suspended') {
+      console.log('Attempting to unlock AudioContext via user interaction');
+      
+      // Create a short silent buffer and play it
+      const buffer = context.createBuffer(1, 1, 22050);
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      
+      // Play the buffer (required by some browsers to unlock)
+      try {
+        source.start(0);
+        console.log('Silent buffer played to unlock audio');
+      } catch (e) {
+        console.error('Failed to play silent buffer:', e);
+      }
+      
+      // Also try explicit resume
+      context.resume().then(() => {
+        console.log('AudioContext resumed successfully via unlock function');
+      }).catch((err: Error) => {
+        console.error('Failed to resume AudioContext:', err);
+      });
+    }
+  }, []);
+
   return {
     playSound,
-    toggleBackgroundMusic
+    toggleBackgroundMusic,
+    unlockAudioContext
   };
 }

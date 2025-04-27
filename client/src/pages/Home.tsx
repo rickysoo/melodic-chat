@@ -15,7 +15,7 @@ export default function Home() {
   
   // Other hooks
   const { toast } = useToast();
-  const { playSound, toggleBackgroundMusic } = useSounds();
+  const { playSound, toggleBackgroundMusic, unlockAudioContext } = useSounds();
   
   // Load saved model on mount
   useEffect(() => {
@@ -36,10 +36,41 @@ export default function Home() {
     setTimeout(() => setIsMusicActive(false), 500);
   }, [playSound, setIsMusicActive]);
   
-  // Music toggle handler - removed background music functionality
+  // Music toggle handler
   const handleToggleMusic = useCallback(() => {
-    setIsMusicEnabled(prev => !prev);
-  }, []);
+    // When enabling music, try to unlock the audio context
+    const newValue = !isMusicEnabled;
+    if (newValue) {
+      unlockAudioContext();
+      // Play a test sound after toggling
+      setTimeout(() => playSound('receive'), 100);
+    }
+    setIsMusicEnabled(newValue);
+  }, [isMusicEnabled, unlockAudioContext, playSound]);
+  
+  // Effect to handle audio unlock on first user interaction
+  useEffect(() => {
+    function handleUserInteraction() {
+      console.log('User interaction detected, unlocking audio');
+      unlockAudioContext();
+      // Remove listeners after first interaction
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    }
+    
+    // Add event listeners to detect user interaction
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction);
+    document.addEventListener('keydown', handleUserInteraction);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+  }, [unlockAudioContext]);
   
   // Chat hook
   const { messages, isTyping, sendMessage, error } = useChat({
@@ -52,6 +83,11 @@ export default function Home() {
   // Message sending handler
   const handleSendMessage = useCallback(async (message: string) => {
     try {
+      // Try to unlock audio context when user sends message
+      if (isMusicEnabled) {
+        unlockAudioContext();
+      }
+      
       await sendMessage(message);
     } catch (err) {
       toast({
@@ -60,7 +96,7 @@ export default function Home() {
         variant: "destructive",
       });
     }
-  }, [sendMessage, toast]);
+  }, [sendMessage, toast, isMusicEnabled, unlockAudioContext]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
