@@ -4,20 +4,15 @@ import { useTheme as useNextTheme } from 'next-themes';
 export function useTheme() {
   const { theme, setTheme, systemTheme } = useNextTheme();
 
+  // Only initialize theme on mount, not on every update
   useEffect(() => {
     // Initialize theme based on user preference
     const savedTheme = localStorage.getItem('melodic_theme');
     if (savedTheme) {
       setTheme(savedTheme);
     }
-  }, [setTheme]);
-
-  // Save theme preference when it changes
-  useEffect(() => {
-    if (theme) {
-      localStorage.setItem('melodic_theme', theme);
-    }
-  }, [theme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array ensures this only runs once
 
   return {
     theme,
