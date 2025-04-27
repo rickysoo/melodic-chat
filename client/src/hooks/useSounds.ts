@@ -6,16 +6,44 @@ export function useSounds() {
   
   // Initialize audio context on first use
   const initAudioContext = () => {
-    if (!audioContext.current) {
-      audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    try {
+      if (!audioContext.current) {
+        // Check if AudioContext is available in the browser
+        if (typeof window === 'undefined' || (!window.AudioContext && !(window as any).webkitAudioContext)) {
+          console.warn('AudioContext is not supported in this browser');
+          return null;
+        }
+        
+        audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('AudioContext initialized successfully');
+      }
+      return audioContext.current;
+    } catch (error) {
+      console.error('Failed to initialize AudioContext:', error);
+      return null;
     }
-    return audioContext.current;
   };
   
   // Play a musical note with specified frequency
   const playNote = (frequency: number, duration: number) => {
     try {
       const context = initAudioContext();
+      
+      // Check if context is available
+      if (!context) {
+        console.warn('Unable to play note: AudioContext not available');
+        return;
+      }
+      
+      // Handle suspended context state (browsers often require user interaction)
+      if (context.state === 'suspended') {
+        console.log('Resuming suspended AudioContext');
+        context.resume().then(() => {
+          console.log('AudioContext resumed successfully');
+        }).catch((err: Error) => {
+          console.error('Failed to resume AudioContext:', err);
+        });
+      }
       
       // Create an oscillator (sound source)
       const oscillator = context.createOscillator();
@@ -33,7 +61,12 @@ export function useSounds() {
       // Start and stop the sound
       oscillator.start();
       setTimeout(() => {
-        oscillator.stop();
+        try {
+          oscillator.stop();
+        } catch (err: any) {
+          // Ignore errors on stop
+          console.debug('Oscillator stop error (safe to ignore):', err?.message);
+        }
       }, duration);
     } catch (e) {
       console.error('Error playing note:', e);

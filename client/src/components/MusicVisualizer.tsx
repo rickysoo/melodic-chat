@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { MusicVisualizerProps } from "@/types";
+import { Music } from "lucide-react";
 
 export default function MusicVisualizer({ isEnabled, isActive }: MusicVisualizerProps) {
   const barRefs = useRef<HTMLDivElement[]>([]);
@@ -51,7 +52,7 @@ export default function MusicVisualizer({ isEnabled, isActive }: MusicVisualizer
       <div ref={el => el && (barRefs.current[8] = el)} className="visualizer-bar w-1 h-6 bg-primary-500 rounded-t-sm" style={{ transform: 'scaleY(0.2)' }}></div>
       
       <span className="ml-4 text-sm font-medium text-gray-600 dark:text-gray-300 flex items-center">
-        <i className="ri-music-2-line mr-1"></i> Now Playing: Ambient Melody
+        <Music className="h-4 w-4 mr-1" /> Musical Notes: {isEnabled ? 'On' : 'Off'}
       </span>
     </motion.div>
   );
