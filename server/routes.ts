@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import path from "path";
 import express from "express";
-import { handlePerplexitySearch } from "./perplexity";
+import { handleOpenRouterSearch } from "./openrouter";
 import { generateChatResponse } from "./openai";
 import { generateSessionId } from "./context";
 
@@ -96,8 +96,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Perplexity web search endpoint
-  app.post('/api/search', handlePerplexitySearch);
+  // OpenRouter web search endpoint
+  app.post('/api/search', handleOpenRouterSearch);
 
   const httpServer = createServer(app);
   return httpServer;
