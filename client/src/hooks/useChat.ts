@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { Message, ChatState, ChatResponse } from '@/types';
 import { apiRequest } from '@/lib/queryClient';
@@ -10,9 +10,37 @@ interface UseChatProps {
   onMessageReceived?: () => void;
 }
 
+// Maximum number of messages to store
+const MAX_STORED_MESSAGES = 50;
+
+// Helper function to load messages from localStorage
+const loadMessagesFromStorage = (): Message[] => {
+  try {
+    const storedMessages = localStorage.getItem('melodic_chat_messages');
+    if (storedMessages) {
+      return JSON.parse(storedMessages);
+    }
+  } catch (error) {
+    console.error('Failed to load messages from localStorage:', error);
+  }
+  return [];
+};
+
+// Helper function to save messages to localStorage
+const saveMessagesToStorage = (messages: Message[]) => {
+  try {
+    // Keep only the last MAX_STORED_MESSAGES messages
+    const messagesToStore = messages.slice(-MAX_STORED_MESSAGES);
+    localStorage.setItem('melodic_chat_messages', JSON.stringify(messagesToStore));
+  } catch (error) {
+    console.error('Failed to save messages to localStorage:', error);
+  }
+};
+
 export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: UseChatProps) {
+  // Initialize with messages from localStorage
   const [state, setState] = useState<ChatState>({
-    messages: [],
+    messages: loadMessagesFromStorage(),
     isTyping: false,
     error: null
   });
@@ -26,12 +54,17 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
       timestamp: Date.now()
     };
 
-    setState(prev => ({
-      ...prev,
-      messages: [...prev.messages, userMessage],
-      isTyping: true,
-      error: null
-    }));
+    setState(prev => {
+      const updatedMessages = [...prev.messages, userMessage];
+      // Save to localStorage
+      saveMessagesToStorage(updatedMessages);
+      return {
+        ...prev,
+        messages: updatedMessages,
+        isTyping: true,
+        error: null
+      };
+    });
 
     if (onMessageSent) {
       onMessageSent();
@@ -61,11 +94,16 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
         timestamp: Date.now()
       };
 
-      setState(prev => ({
-        ...prev,
-        messages: [...prev.messages, assistantMessage],
-        isTyping: false
-      }));
+      setState(prev => {
+        const updatedMessages = [...prev.messages, assistantMessage];
+        // Save to localStorage
+        saveMessagesToStorage(updatedMessages);
+        return {
+          ...prev,
+          messages: updatedMessages,
+          isTyping: false
+        };
+      });
 
       if (onMessageReceived) {
         onMessageReceived();
@@ -80,8 +118,19 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
     }
   }, [apiKey, model, onMessageSent, onMessageReceived]);
 
+  // Function to clear chat history
+  const clearChatHistory = useCallback(() => {
+    localStorage.removeItem('melodic_chat_messages');
+    setState({
+      messages: [],
+      isTyping: false,
+      error: null
+    });
+  }, []);
+
   return {
     ...state,
-    sendMessage
+    sendMessage,
+    clearChatHistory
   };
 }

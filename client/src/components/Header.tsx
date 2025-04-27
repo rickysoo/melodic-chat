@@ -1,11 +1,18 @@
 import { useState, useEffect } from "react";
 import MelodicLogo from "./MelodicLogo";
 import { useIsPwa } from "@/hooks/use-mobile";
-import { WifiOff } from "lucide-react";
+import { WifiOff, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
-export default function Header() {
+interface HeaderProps {
+  onClearChat?: () => void;
+}
+
+export default function Header({ onClearChat }: HeaderProps) {
   const isPwa = useIsPwa();
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const { toast } = useToast();
   
   // Monitor online/offline status
   useEffect(() => {
