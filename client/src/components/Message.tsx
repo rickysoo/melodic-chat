@@ -18,8 +18,8 @@ export default function Message({ message }: MessageProps) {
       className={`flex items-start ${isUser ? 'justify-end max-w-xl ml-auto' : 'max-w-xl'} fade-in`}
     >
       {!isUser && (
-        <div className="flex-shrink-0 w-8 h-8 mr-2">
-          <MelodicLogo size={32} />
+        <div className="flex-shrink-0 w-10 h-10 mr-2 flex items-center">
+          <MelodicLogo size={40} />
         </div>
       )}
       
