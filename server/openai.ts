@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { contextManager } from "./context";
+import { ChatCompletionMessageParam } from "openai/resources";
 
 export interface ChatOptions {
   apiKey: string;
@@ -7,58 +7,62 @@ export interface ChatOptions {
   model?: string;
   systemPrompt?: string;
   sessionId?: string;
+  conversationHistory?: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+  }>;
 }
 
+// Maximum number of messages to include in the conversation history
+const MAX_CONVERSATION_HISTORY = 50;
+
 export async function generateChatResponse(options: ChatOptions) {
-  const { apiKey, message, model = "gpt-4o-mini", systemPrompt, sessionId } = options;
+  const { apiKey, message, model = "gpt-4o-mini", systemPrompt, conversationHistory } = options;
   
   // Using GPT-4o-mini as the default model which is faster and more efficient
   const openai = new OpenAI({ apiKey });
   
   try {
-    // Get user context if a session ID is provided
-    let userContext: Record<string, string> = {};
-    let enhancedSystemPrompt = systemPrompt;
+    // Default system prompt if none is provided
+    const defaultSystemPrompt = "You are Melodic, a helpful, creative, and musically-inclined AI assistant. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. Format your responses with multiple paragraphs for better readability. Use markdown formatting like **bold**, *italic*, and bullet points where appropriate. Use emojis where appropriate, especially music-related ones.";
     
-    if (sessionId) {
-      // Get existing context
-      userContext = await contextManager.getContext(sessionId);
-      
-      // Extract any new context from the current message
-      const updatedContext = contextManager.extractUserInfo(message, userContext);
-      
-      // If context has changed, update it
-      if (JSON.stringify(updatedContext) !== JSON.stringify(userContext)) {
-        userContext = updatedContext;
-        await contextManager.updateContext(sessionId, userContext);
-      }
-      
-      // Enhance the system prompt with user context
-      if (Object.keys(userContext).length > 0) {
-        const contextDetails = Object.entries(userContext)
-          .map(([key, value]) => `The user's ${key} is ${value}.`)
-          .join(' ');
-          
-        enhancedSystemPrompt = (systemPrompt || 
-          "You are Melodic, a helpful, creative, and musically-inclined AI assistant. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. Keep responses concise and use emojis where appropriate, especially music-related ones.\n\n") +
-          `\n\nContextual information about the user: ${contextDetails} Be sure to remember and use this information appropriately in your responses.`;
-      }
+    const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
+
+    // Create the messages array with system prompt
+    const systemMessage: ChatCompletionMessageParam = {
+      role: "system",
+      content: finalSystemPrompt
+    };
+    
+    // Base messages array starts with the system prompt
+    const messages: ChatCompletionMessageParam[] = [systemMessage];
+    
+    // Add conversation history if provided
+    if (conversationHistory && conversationHistory.length > 0) {
+      // Convert the role format from 'user'|'assistant' to OpenAI's expected format
+      // and only include up to MAX_CONVERSATION_HISTORY messages
+      const formattedHistory = conversationHistory
+        .slice(-MAX_CONVERSATION_HISTORY)
+        .map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        } as ChatCompletionMessageParam));
+        
+      messages.push(...formattedHistory);
     }
     
-    // Default system prompt if none is provided and no context is available
-    if (!enhancedSystemPrompt) {
-      enhancedSystemPrompt = "You are Melodic, a helpful, creative, and musically-inclined AI assistant. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. Keep responses concise and use emojis where appropriate, especially music-related ones.\n\nYou're running on the GPT-4o-mini model by default. Note that you don't have built-in web search capabilities - if users ask about searching the web, kindly let them know that you don't have direct web access, but you can help with general knowledge questions based on your training data.";
-    }
+    // Add the current user message
+    const userMessage: ChatCompletionMessageParam = {
+      role: "user",
+      content: message
+    };
     
+    messages.push(userMessage);
+    
+    // Make the API call with the conversation history
     const response = await openai.chat.completions.create({
       model,
-      messages: [
-        {
-          role: "system",
-          content: enhancedSystemPrompt
-        },
-        { role: "user", content: message }
-      ],
+      messages,
       temperature: 0.7,
       max_tokens: 500
     });
