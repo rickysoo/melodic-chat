@@ -34,10 +34,17 @@ export default function Header({ onToggleMusic, isMusicEnabled }: HeaderProps) {
         
         <button 
           className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => {
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            localStorage.setItem('theme', newTheme);
+          }}
         >
-          <i className="ri-sun-line text-xl dark:hidden"></i>
-          <i className="ri-moon-line text-xl hidden dark:block"></i>
+          {theme === 'dark' ? (
+            <i className="ri-moon-line text-xl"></i>
+          ) : (
+            <i className="ri-sun-line text-xl"></i>
+          )}
         </button>
       </div>
     </header>
