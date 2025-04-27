@@ -3,14 +3,12 @@ import Header from "@/components/Header";
 import MessageThread from "@/components/MessageThread";
 import ChatInput from "@/components/ChatInput";
 import MusicVisualizer from "@/components/MusicVisualizer";
-import ApiKeyModal from "@/components/ApiKeyModal";
 import { useChat } from "@/hooks/useChat";
 import { useSounds } from "@/hooks/useSounds";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-  const [showApiKeyModal, setShowApiKeyModal] = useState(true);
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  // We're using the environment API key now, no need for a modal
   const [model, setModel] = useState<string>("gpt-4o");
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [isMusicActive, setIsMusicActive] = useState(false);
@@ -18,7 +16,7 @@ export default function Home() {
   const { toast } = useToast();
   const { playSound, toggleBackgroundMusic } = useSounds();
   const { messages, isTyping, sendMessage, error } = useChat({
-    apiKey,
+    apiKey: "env", // Use environment variable
     model,
     onMessageSent: () => {
       playSound('send');
@@ -32,16 +30,10 @@ export default function Home() {
     }
   });
 
-  // Check for saved API key on load
+  // Initialize on load
   useEffect(() => {
-    const savedApiKey = localStorage.getItem("melodic_api_key");
     const savedModel = localStorage.getItem("melodic_model") || "gpt-4o";
-    
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
-      setModel(savedModel);
-      setShowApiKeyModal(false);
-    }
+    setModel(savedModel);
 
     // Start background music if enabled
     if (isMusicEnabled) {
@@ -51,7 +43,7 @@ export default function Home() {
     return () => {
       toggleBackgroundMusic(false);
     };
-  }, [toggleBackgroundMusic]);
+  }, [toggleBackgroundMusic, isMusicEnabled]);
 
   // Toggle music
   const handleToggleMusic = () => {
@@ -60,26 +52,8 @@ export default function Home() {
     toggleBackgroundMusic(newState);
   };
 
-  // Handle API key modal
-  const handleSaveApiKey = (newApiKey: string, newModel: string) => {
-    localStorage.setItem("melodic_api_key", newApiKey);
-    localStorage.setItem("melodic_model", newModel);
-    setApiKey(newApiKey);
-    setModel(newModel);
-    setShowApiKeyModal(false);
-    toast({
-      title: "API Key Saved",
-      description: "Your OpenAI API key has been saved successfully!",
-    });
-  };
-
   // Handle sending message
   const handleSendMessage = async (message: string) => {
-    if (!apiKey) {
-      setShowApiKeyModal(true);
-      return;
-    }
-    
     try {
       await sendMessage(message);
     } catch (err) {
@@ -102,12 +76,6 @@ export default function Home() {
         
         <ChatInput onSendMessage={handleSendMessage} disabled={isTyping} />
       </main>
-      
-      <ApiKeyModal 
-        isOpen={showApiKeyModal} 
-        onClose={() => setShowApiKeyModal(false)}
-        onSave={handleSaveApiKey}
-      />
     </div>
   );
 }

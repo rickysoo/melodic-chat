@@ -1,8 +1,14 @@
 import { MessageProps } from "@/types";
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 
 export default function Message({ message }: MessageProps) {
   const isUser = message.role === "user";
+  
+  // Add musical note to content if it's not already there
+  const displayContent = isUser 
+    ? `${message.content} 🎵` 
+    : message.content;
   
   return (
     <motion.div 
@@ -18,7 +24,11 @@ export default function Message({ message }: MessageProps) {
       )}
       
       <div className={`${isUser ? 'chat-gradient-user' : 'chat-gradient-bot'} text-white px-4 py-3 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-sm`}>
-        <p>{message.content}</p>
+        <div className="markdown-content">
+          <ReactMarkdown>
+            {displayContent}
+          </ReactMarkdown>
+        </div>
       </div>
       
       {isUser && (

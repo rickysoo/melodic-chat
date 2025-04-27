@@ -20,9 +20,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid request data", errors: validation.error.errors });
       }
       
-      const { message, apiKey, model } = validation.data;
+      let { message, apiKey, model } = validation.data;
       
-      // Initialize OpenAI with the user's API key
+      // If the client is requesting to use the environment API key
+      if (apiKey === "use_env") {
+        apiKey = process.env.OPENAI_API_KEY || "";
+        if (!apiKey) {
+          return res.status(500).json({ message: "OpenAI API key not found in environment variables" });
+        }
+      }
+      
+      // Initialize OpenAI with the API key
       const openai = new OpenAI({ apiKey });
       
       // Send request to OpenAI
@@ -31,12 +39,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are Melodic, a helpful, creative, and musically-inclined AI assistant. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. Keep responses concise and use emojis where appropriate, especially music-related ones."
+            content: "You are Melodic, a helpful, creative, and musically-inclined AI assistant. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. Format your responses with multiple paragraphs for better readability. Use markdown formatting like **bold**, *italic*, and bullet points where appropriate. Use emojis where appropriate, especially music-related ones."
           },
           { role: "user", content: message }
         ],
         temperature: 0.7,
-        max_tokens: 500
+        max_tokens: 700
       });
       
       res.json(response);

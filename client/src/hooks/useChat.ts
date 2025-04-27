@@ -4,7 +4,7 @@ import { Message, ChatState, ChatResponse } from '@/types';
 import { apiRequest } from '@/lib/queryClient';
 
 interface UseChatProps {
-  apiKey: string | null;
+  apiKey: string | "env"; // 'env' means use the environment variable on the server
   model: string;
   onMessageSent?: () => void;
   onMessageReceived?: () => void;
@@ -18,11 +18,6 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
   });
 
   const sendMessage = useCallback(async (content: string) => {
-    if (!apiKey) {
-      setState(prev => ({ ...prev, error: 'API key is required' }));
-      return;
-    }
-
     // Add user message to state
     const userMessage: Message = {
       id: nanoid(),
@@ -46,17 +41,23 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
       // Send request to server
       const response = await apiRequest('POST', '/api/chat', {
         message: content,
-        apiKey,
+        apiKey: apiKey === "env" ? "use_env" : apiKey, // Signal server to use env variable
         model
       });
 
       const data: ChatResponse = await response.json();
       
+      // Format the assistant response to include a musical note at the end
+      let assistantContent = data.choices[0].message.content;
+      if (!assistantContent.endsWith('🎵')) {
+        assistantContent += ' 🎵';
+      }
+      
       // Add assistant response to state
       const assistantMessage: Message = {
         id: nanoid(),
         role: 'assistant',
-        content: data.choices[0].message.content,
+        content: assistantContent,
         timestamp: Date.now()
       };
 
