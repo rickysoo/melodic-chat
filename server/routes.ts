@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import OpenAI from "openai";
 import { z } from "zod";
+import path from "path";
+import express from "express";
 
 const chatRequestSchema = z.object({
   message: z.string(),
@@ -11,6 +13,21 @@ const chatRequestSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve PWA static files from the public directory
+  const publicPath = path.resolve(process.cwd(), 'client/public');
+  app.use(express.static(publicPath, {
+    setHeaders: (res, filePath) => {
+      // Set proper MIME types for PWA files
+      if (filePath.endsWith('manifest.json')) {
+        res.setHeader('Content-Type', 'application/manifest+json');
+      }
+      else if (filePath.endsWith('service-worker.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+        // No cache for service worker
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      }
+    }
+  }));
   // Chat endpoint
   app.post('/api/chat', async (req, res) => {
     try {

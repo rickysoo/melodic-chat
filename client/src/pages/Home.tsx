@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Header from "@/components/Header";
 import MessageThread from "@/components/MessageThread";
 import ChatInput from "@/components/ChatInput";
 import { useChat } from "@/hooks/useChat";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/useSounds";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Home() {
   // State hooks
