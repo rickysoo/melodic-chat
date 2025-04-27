@@ -34,7 +34,7 @@ export function usePerplexitySearch({ onSearchComplete, onError }: UsePerplexity
     setNeedsApiKey(false);
     
     try {
-      const response = await apiRequest<PerplexitySearchResult | PerplexityError>({
+      const response = await apiRequest({
         url: '/api/search',
         method: 'POST',
         body: {
@@ -44,28 +44,30 @@ export function usePerplexitySearch({ onSearchComplete, onError }: UsePerplexity
       });
 
       // Check if we got an error response
-      if ('error' in response) {
-        setError(response.error);
+      if (response && typeof response === 'object' && 'error' in response) {
+        const errorResponse = response as PerplexityError;
+        setError(errorResponse.error);
         
-        if (response.needsApiKey) {
+        if (errorResponse.needsApiKey) {
           setNeedsApiKey(true);
         }
         
         if (onError) {
-          onError(response.error);
+          onError(errorResponse.error);
         }
         
         return null;
       }
       
-      // We got a successful response
-      setResult(response);
+      // We got a successful response, cast it to our expected type
+      const successResponse = response as unknown as PerplexitySearchResult;
+      setResult(successResponse);
       
       if (onSearchComplete) {
-        onSearchComplete(response);
+        onSearchComplete(successResponse);
       }
       
-      return response;
+      return successResponse;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
