@@ -25,7 +25,7 @@ export function useSounds() {
   };
   
   // Play a musical note with specified frequency
-  const playNote = (frequency: number, duration: number) => {
+  const playNote = (frequency: number, duration: number, waveType: OscillatorType = 'sine', volume: number = 0.1) => {
     try {
       const context = initAudioContext();
       
@@ -47,12 +47,18 @@ export function useSounds() {
       
       // Create an oscillator (sound source)
       const oscillator = context.createOscillator();
-      oscillator.type = 'sine'; // Sine wave - smooth musical tone
+      oscillator.type = waveType; // Waveform type
       oscillator.frequency.value = frequency; // Frequency in hertz
       
       // Create a gain node (volume control)
       const gainNode = context.createGain();
-      gainNode.gain.value = 0.1; // Set to a lower volume
+      gainNode.gain.value = volume; // Set volume
+      
+      // Add fade in/out for smoother sound
+      const now = context.currentTime;
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(volume, now + 0.01); // 10ms fade in
+      gainNode.gain.linearRampToValueAtTime(0, now + duration/1000); // Fade out at the end
       
       // Connect nodes
       oscillator.connect(gainNode);
@@ -75,13 +81,25 @@ export function useSounds() {
   
   // Play different musical notes for different message types
   const playSound = useCallback((type: 'send' | 'receive') => {
-    // Higher note for send, lower note for receive
+    // Simple single note for user sending a message
     if (type === 'send') {
-      // Play C5 note (523.25 Hz)
-      playNote(523.25, 120);
-    } else {
-      // Play G4 note (392.00 Hz)
-      playNote(392.00, 120);
+      // Play C5 note (523.25 Hz) with a sine wave for a pleasing sound
+      playNote(523.25, 200, 'sine', 0.15);
+    } 
+    // Play a nice series of 3 musical notes for Melodic's reply (C-major triad ascending)
+    else {
+      // Initial note - C4 (261.63 Hz)
+      playNote(261.63, 180, 'sine', 0.12);
+      
+      // Second note with slight delay - E4 (329.63 Hz)
+      setTimeout(() => {
+        playNote(329.63, 180, 'sine', 0.12);
+      }, 180);
+      
+      // Third note with more delay - G4 (392.00 Hz)
+      setTimeout(() => {
+        playNote(392.00, 250, 'sine', 0.15);
+      }, 360);
     }
   }, []);
 
