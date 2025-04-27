@@ -1,77 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { HeaderProps } from "@/types";
-import { Moon, Sun, Music, VolumeX, Settings } from "lucide-react";
-import { useTheme as useNextTheme } from "next-themes";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import MelodicLogo from "./MelodicLogo";
 
-export default function Header({ onToggleMusic, isMusicEnabled }: HeaderProps) {
-  // Use the next-themes hook directly to avoid any potential issues
-  const { resolvedTheme, setTheme } = useNextTheme();
-  
-  // Simple toggle function
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-  };
-  
+export default function Header() {
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 flex items-center justify-between shadow-sm">
+    <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-3">
-        <div className="bg-gradient-to-r from-primary-600 to-secondary-500 p-2 rounded-lg">
-          <span className="text-white font-bold">♪</span>
-        </div>
+        <MelodicLogo size={32} />
         <h1 className="font-heading font-bold text-xl sm:text-2xl bg-clip-text text-transparent bg-gradient-to-r from-primary-600 via-accent-500 to-secondary-500">
-          Melodic Chat
+          Melodic
         </h1>
-      </div>
-
-      <div className="flex items-center space-x-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={onToggleMusic}
-              className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
-            >
-              {isMusicEnabled ? (
-                <Music className="h-5 w-5" />
-              ) : (
-                <VolumeX className="h-5 w-5" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{isMusicEnabled ? 'Disable' : 'Enable'} musical notes</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={toggleTheme}
-              className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
-            >
-              {resolvedTheme === 'dark' ? (
-                <Moon className="h-5 w-5" />
-              ) : (
-                <Sun className="h-5 w-5" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Toggle {resolvedTheme === 'dark' ? 'light' : 'dark'} mode</p>
-          </TooltipContent>
-        </Tooltip>
       </div>
     </header>
   );

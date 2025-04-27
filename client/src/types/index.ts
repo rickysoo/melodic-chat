@@ -18,8 +18,7 @@ export interface ApiKeyModalProps {
 }
 
 export interface HeaderProps {
-  onToggleMusic: () => void;
-  isMusicEnabled: boolean;
+  // No props needed for the simplified header
 }
 
 export interface ChatInputProps {

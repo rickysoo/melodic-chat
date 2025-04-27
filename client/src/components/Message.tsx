@@ -1,14 +1,14 @@
 import { MessageProps } from "@/types";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import MelodicLogo from "./MelodicLogo";
+import { User } from "lucide-react";
 
 export default function Message({ message }: MessageProps) {
   const isUser = message.role === "user";
   
-  // Add musical note to content if it's not already there
-  const displayContent = isUser 
-    ? `${message.content} 🎵` 
-    : message.content;
+  // Just use the message content directly
+  const displayContent = message.content;
   
   return (
     <motion.div 
@@ -18,8 +18,8 @@ export default function Message({ message }: MessageProps) {
       className={`flex items-start ${isUser ? 'justify-end max-w-xl ml-auto' : 'max-w-xl'} fade-in`}
     >
       {!isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary-500 flex items-center justify-center text-white mr-2">
-          <i className="ri-robot-line"></i>
+        <div className="flex-shrink-0 w-8 h-8 mr-2">
+          <MelodicLogo size={32} />
         </div>
       )}
       
@@ -33,7 +33,7 @@ export default function Message({ message }: MessageProps) {
       
       {isUser && (
         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white ml-2">
-          <i className="ri-user-line"></i>
+          <User className="h-4 w-4" />
         </div>
       )}
     </motion.div>
