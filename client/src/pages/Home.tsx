@@ -8,7 +8,7 @@ import { useSounds } from "@/hooks/useSounds";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-  // State hooks first
+  // State hooks
   const [model, setModel] = useState<string>("gpt-4o-mini");
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [isMusicActive, setIsMusicActive] = useState(false);
@@ -16,8 +16,14 @@ export default function Home() {
   // Other hooks
   const { toast } = useToast();
   const { playSound, toggleBackgroundMusic } = useSounds();
+  
+  // Load saved model on mount
+  useEffect(() => {
+    const savedModel = localStorage.getItem("melodic_model") || "gpt-4o-mini";
+    setModel(savedModel);
+  }, []);
  
-  // Callbacks
+  // Message callbacks
   const onMessageSent = useCallback(() => {
     playSound('send');
     setIsMusicActive(true);
@@ -30,7 +36,12 @@ export default function Home() {
     setTimeout(() => setIsMusicActive(false), 500);
   }, [playSound, setIsMusicActive]);
   
-  // Chat hook after all callback definitions
+  // Music toggle handler - removed background music functionality
+  const handleToggleMusic = useCallback(() => {
+    setIsMusicEnabled(prev => !prev);
+  }, []);
+  
+  // Chat hook
   const { messages, isTyping, sendMessage, error } = useChat({
     apiKey: "env", // Use environment variable
     model,
@@ -38,16 +49,7 @@ export default function Home() {
     onMessageReceived
   });
 
-  // Toggle music handler
-  const handleToggleMusic = useCallback(() => {
-    setIsMusicEnabled(prev => {
-      const newState = !prev;
-      toggleBackgroundMusic(newState);
-      return newState;
-    });
-  }, [toggleBackgroundMusic]);
-
-  // Handle sending message
+  // Message sending handler
   const handleSendMessage = useCallback(async (message: string) => {
     try {
       await sendMessage(message);
@@ -59,21 +61,6 @@ export default function Home() {
       });
     }
   }, [sendMessage, toast]);
-
-  // Initialize on load
-  useEffect(() => {
-    const savedModel = localStorage.getItem("melodic_model") || "gpt-4o-mini";
-    setModel(savedModel);
-
-    // Start background music if enabled
-    if (isMusicEnabled) {
-      toggleBackgroundMusic(true);
-    }
-
-    return () => {
-      toggleBackgroundMusic(false);
-    };
-  }, [isMusicEnabled, toggleBackgroundMusic]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">

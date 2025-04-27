@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { HeaderProps } from "@/types";
-import { Moon, Sun, Volume2, VolumeX, Settings } from "lucide-react";
+import { Moon, Sun, Music, VolumeX, Settings } from "lucide-react";
 import { useTheme as useNextTheme } from "next-themes";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Header({ onToggleMusic, isMusicEnabled }: HeaderProps) {
   // Use the next-themes hook directly to avoid any potential issues
@@ -24,18 +25,25 @@ export default function Header({ onToggleMusic, isMusicEnabled }: HeaderProps) {
       </div>
 
       <div className="flex items-center space-x-4">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={onToggleMusic}
-          className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
-        >
-          {isMusicEnabled ? (
-            <Volume2 className="h-5 w-5" />
-          ) : (
-            <VolumeX className="h-5 w-5" />
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onToggleMusic}
+              className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+            >
+              {isMusicEnabled ? (
+                <Music className="h-5 w-5" />
+              ) : (
+                <VolumeX className="h-5 w-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{isMusicEnabled ? 'Disable' : 'Enable'} musical notes</p>
+          </TooltipContent>
+        </Tooltip>
         
         <Button 
           variant="ghost" 
@@ -45,18 +53,25 @@ export default function Header({ onToggleMusic, isMusicEnabled }: HeaderProps) {
           <Settings className="h-5 w-5" />
         </Button>
         
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={toggleTheme}
-          className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
-        >
-          {resolvedTheme === 'dark' ? (
-            <Moon className="h-5 w-5" />
-          ) : (
-            <Sun className="h-5 w-5" />
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleTheme}
+              className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+            >
+              {resolvedTheme === 'dark' ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Toggle {resolvedTheme === 'dark' ? 'light' : 'dark'} mode</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </header>
   );
