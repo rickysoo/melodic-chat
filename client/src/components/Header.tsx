@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import MelodicLogo from "./MelodicLogo";
 import { useIsPwa } from "@/hooks/use-mobile";
-import { WifiOff, Trash2 } from "lucide-react";
+import { WifiOff, Trash2, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { SoundSettingsModal } from "./SoundSettingsModal";
+import { useSounds, SoundTheme } from "@/hooks/useSounds";
 
 interface HeaderProps {
   onClearChat?: () => void;
@@ -12,7 +14,17 @@ interface HeaderProps {
 export default function Header({ onClearChat }: HeaderProps) {
   const isPwa = useIsPwa();
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [isSoundSettingsOpen, setIsSoundSettingsOpen] = useState<boolean>(false);
   const { toast } = useToast();
+  
+  // Sound settings
+  const { 
+    settings, 
+    toggleSounds, 
+    changeTheme, 
+    adjustVolume, 
+    setIntensity 
+  } = useSounds();
   
   // Monitor online/offline status
   useEffect(() => {
@@ -37,6 +49,10 @@ export default function Header({ onClearChat }: HeaderProps) {
         duration: 3000,
       });
     }
+  };
+  
+  const handleOpenSoundSettings = () => {
+    setIsSoundSettingsOpen(true);
   };
 
   return (

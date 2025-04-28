@@ -1,7 +1,102 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 
-// Create our own audio context for musical note sounds
+// Sound themes definitions
+export type SoundTheme = 'classical' | 'electronic' | 'percussion' | 'minimal';
+
+export interface SoundSettings {
+  theme: SoundTheme;
+  volume: number; // 0 to 1
+  enabled: boolean;
+  intensity: 'low' | 'medium' | 'high';
+}
+
+const defaultSettings: SoundSettings = {
+  theme: 'classical',
+  volume: 0.15,
+  enabled: true,
+  intensity: 'medium'
+};
+
+// Theme definitions with specific waveforms and frequencies
+const themes = {
+  classical: {
+    waveform: 'sine' as OscillatorType,
+    send: {
+      notes: [{ frequency: 523.25, duration: 200 }], // C5
+    },
+    receive: {
+      notes: [
+        { frequency: 261.63, duration: 180 }, // C4
+        { frequency: 329.63, duration: 180 }, // E4
+        { frequency: 392.00, duration: 250 }, // G4
+      ],
+    },
+  },
+  electronic: {
+    waveform: 'sawtooth' as OscillatorType,
+    send: {
+      notes: [{ frequency: 440.00, duration: 150 }], // A4
+    },
+    receive: {
+      notes: [
+        { frequency: 349.23, duration: 120 }, // F4
+        { frequency: 440.00, duration: 120 }, // A4
+        { frequency: 523.25, duration: 180 }, // C5
+      ],
+    },
+  },
+  percussion: {
+    waveform: 'square' as OscillatorType,
+    send: {
+      notes: [{ frequency: 200.00, duration: 100 }], // Low percussive sound
+    },
+    receive: {
+      notes: [
+        { frequency: 300.00, duration: 80 }, // Mid percussion
+        { frequency: 400.00, duration: 80 }, // Higher percussion
+        { frequency: 500.00, duration: 120 }, // Highest percussion
+      ],
+    },
+  },
+  minimal: {
+    waveform: 'sine' as OscillatorType,
+    send: {
+      notes: [{ frequency: 440.00, duration: 100 }], // A4 (brief)
+    },
+    receive: {
+      notes: [
+        { frequency: 440.00, duration: 100 }, // A4 (brief)
+        { frequency: 493.88, duration: 150 }, // B4 (slight longer)
+      ],
+    },
+  },
+};
+
+// Intensity multipliers
+const intensityFactors = {
+  low: 0.7,
+  medium: 1.0,
+  high: 1.3,
+};
+
+// Hook for sound functionality
 export function useSounds() {
+  // Load settings from localStorage or use defaults
+  const loadSettings = (): SoundSettings => {
+    if (typeof window === 'undefined') return defaultSettings;
+    
+    try {
+      const saved = localStorage.getItem('melodic_sound_settings');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to load sound settings:', e);
+    }
+    return defaultSettings;
+  };
+
+  const [settings, setSettings] = useState<SoundSettings>(loadSettings);
   const audioContext = useRef<AudioContext | null>(null);
   
   // Initialize audio context on first use
@@ -79,29 +174,92 @@ export function useSounds() {
     }
   };
   
-  // Play different musical notes for different message types
-  const playSound = useCallback((type: 'send' | 'receive') => {
-    // Simple single note for user sending a message
-    if (type === 'send') {
-      // Play C5 note (523.25 Hz) with a sine wave for a pleasing sound
-      playNote(523.25, 200, 'sine', 0.15);
-    } 
-    // Play a nice series of 3 musical notes for Melodic's reply (C-major triad ascending)
-    else {
-      // Initial note - C4 (261.63 Hz)
-      playNote(261.63, 180, 'sine', 0.12);
-      
-      // Second note with slight delay - E4 (329.63 Hz)
-      setTimeout(() => {
-        playNote(329.63, 180, 'sine', 0.12);
-      }, 180);
-      
-      // Third note with more delay - G4 (392.00 Hz)
-      setTimeout(() => {
-        playNote(392.00, 250, 'sine', 0.15);
-      }, 360);
+  // Save settings to localStorage
+  const saveSettings = useCallback((newSettings: SoundSettings) => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      localStorage.setItem('melodic_sound_settings', JSON.stringify(newSettings));
+    } catch (e) {
+      console.error('Failed to save sound settings:', e);
     }
   }, []);
+
+  // Update settings
+  const updateSettings = useCallback((newSettings: Partial<SoundSettings>) => {
+    setSettings(prev => {
+      const updated = { ...prev, ...newSettings };
+      saveSettings(updated);
+      return updated;
+    });
+  }, [saveSettings]);
+
+  // Calculate effective volume based on settings
+  const getEffectiveVolume = useCallback((baseVolume: number) => {
+    if (!settings.enabled) return 0;
+    
+    // Apply intensity factor to base volume
+    const intensityFactor = intensityFactors[settings.intensity] || 1.0;
+    return Math.min(1.0, baseVolume * settings.volume * intensityFactor);
+  }, [settings]);
+
+  // Play themed notes based on the selected theme
+  const playThemedNotes = useCallback((type: 'send' | 'receive', messageLength?: number) => {
+    // If sounds are disabled, don't play anything
+    if (!settings.enabled) return;
+    
+    const theme = themes[settings.theme];
+    const notes = theme[type].notes;
+    const waveform = theme.waveform;
+    
+    // Adjust intensity based on message length if provided
+    let intensityFactor = intensityFactors[settings.intensity];
+    if (messageLength && type === 'receive') {
+      // Slightly increase intensity for longer messages
+      if (messageLength > 500) intensityFactor *= 1.1;
+      if (messageLength > 1000) intensityFactor *= 1.1;
+    }
+    
+    // Play each note in the sequence with appropriate delays
+    let delay = 0;
+    notes.forEach((note, index) => {
+      setTimeout(() => {
+        const volume = getEffectiveVolume(index === notes.length - 1 ? 0.15 : 0.12);
+        playNote(note.frequency, note.duration, waveform, volume);
+      }, delay);
+      delay += note.duration;
+    });
+  }, [settings, getEffectiveVolume, playNote]);
+
+  // Play different musical notes for different message types
+  const playSound = useCallback((type: 'send' | 'receive', messageLength?: number) => {
+    playThemedNotes(type, messageLength);
+  }, [playThemedNotes]);
+  
+  // Function to toggle sounds on/off
+  const toggleSounds = useCallback((enabled: boolean) => {
+    updateSettings({ enabled });
+  }, [updateSettings]);
+  
+  // Function to change the sound theme
+  const changeTheme = useCallback((theme: SoundTheme) => {
+    updateSettings({ theme });
+    
+    // Play a test sound to preview the theme
+    playThemedNotes('send');
+  }, [updateSettings, playThemedNotes]);
+  
+  // Function to adjust volume (0 to 1)
+  const adjustVolume = useCallback((volume: number) => {
+    // Ensure volume is between 0 and 1
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    updateSettings({ volume: clampedVolume });
+  }, [updateSettings]);
+  
+  // Function to change intensity
+  const setIntensity = useCallback((intensity: 'low' | 'medium' | 'high') => {
+    updateSettings({ intensity });
+  }, [updateSettings]);
 
   // No background music, just a stub function for compatibility
   const toggleBackgroundMusic = useCallback((play: boolean) => {
@@ -136,11 +294,21 @@ export function useSounds() {
         console.error('Failed to resume AudioContext:', err);
       });
     }
-  }, []);
+  }, [initAudioContext]);
+
+  // Effect to save settings when they change
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings, saveSettings]);
 
   return {
     playSound,
     toggleBackgroundMusic,
-    unlockAudioContext
+    unlockAudioContext,
+    settings,
+    toggleSounds,
+    changeTheme,
+    adjustVolume,
+    setIntensity
   };
 }
