@@ -75,6 +75,18 @@ export default function Header({ onClearChat }: HeaderProps) {
       </div>
       
       <div className="flex items-center space-x-3">
+        {/* Sound Settings button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleOpenSoundSettings}
+          className={`text-gray-500 hover:text-gray-700 flex items-center ${settings.enabled ? 'text-purple-500' : ''}`}
+          title="Sound Settings"
+        >
+          <Music className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Sounds</span>
+        </Button>
+        
         {/* Clear chat button */}
         {onClearChat && (
           <Button
@@ -96,6 +108,17 @@ export default function Header({ onClearChat }: HeaderProps) {
             Offline
           </div>
         )}
+        
+        {/* Sound Settings Modal */}
+        <SoundSettingsModal
+          isOpen={isSoundSettingsOpen}
+          onClose={() => setIsSoundSettingsOpen(false)}
+          settings={settings}
+          onToggleSounds={toggleSounds}
+          onChangeTheme={changeTheme}
+          onAdjustVolume={adjustVolume}
+          onSetIntensity={setIntensity}
+        />
       </div>
     </header>
   );

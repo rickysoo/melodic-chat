@@ -53,12 +53,12 @@ export default function Home() {
   }, []);
   
   // Message callbacks for sound effects
-  const onMessageSent = useCallback(() => {
-    playSound('send');
+  const onMessageSent = useCallback((message?: string) => {
+    playSound('send', message?.length);
   }, [playSound]);
   
-  const onMessageReceived = useCallback(() => {
-    playSound('receive');
+  const onMessageReceived = useCallback((message?: string) => {
+    playSound('receive', message?.length);
   }, [playSound]);
   
   // Effect to handle audio unlock on first user interaction

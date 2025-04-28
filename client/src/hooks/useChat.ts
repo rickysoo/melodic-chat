@@ -6,8 +6,8 @@ import { apiRequest } from '@/lib/queryClient';
 interface UseChatProps {
   apiKey: string | "env"; // 'env' means use the environment variable on the server
   model: string;
-  onMessageSent?: () => void;
-  onMessageReceived?: () => void;
+  onMessageSent?: (message?: string) => void;
+  onMessageReceived?: (message?: string) => void;
 }
 
 // Type for the enhanced ChatResponse that includes sessionId
@@ -159,7 +159,7 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
     });
 
     if (onMessageSent) {
-      onMessageSent();
+      onMessageSent(content);
     }
 
     try {
@@ -212,7 +212,7 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
       });
 
       if (onMessageReceived) {
-        onMessageReceived();
+        onMessageReceived(assistantContent);
       }
 
     } catch (error) {
