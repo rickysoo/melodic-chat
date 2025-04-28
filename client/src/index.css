@@ -157,14 +157,32 @@
     margin-bottom: 0;
   }
   
-  .markdown-content ul, 
-  .markdown-content ol {
+  /* Enhanced list styling */
+  .markdown-content ul {
+    list-style-type: disc;
     margin-left: 1.5rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
+  }
+  
+  .markdown-content ol {
+    list-style-type: decimal;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+    padding-left: 0.5rem;
   }
   
   .markdown-content li {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.25rem;
+  }
+  
+  .markdown-content li p {
+    margin-bottom: 0.5rem;
+  }
+  
+  .markdown-content li:last-child {
+    margin-bottom: 0;
   }
   
   .markdown-content h1, 
@@ -199,15 +217,19 @@
     margin-bottom: 0.75rem;
   }
   
-  /* Table styling */
+  /* Improved table styling */
   .markdown-content table {
     border-collapse: collapse;
     margin: 1rem 0;
     width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.25rem;
+    overflow: hidden;
   }
   
   .markdown-content th {
-    padding: 0.5rem;
+    padding: 0.75rem 0.5rem;
     text-align: left;
     font-weight: 600;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -215,8 +237,9 @@
   }
   
   .markdown-content td {
-    padding: 0.5rem;
+    padding: 0.75rem 0.5rem;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    vertical-align: top;
   }
   
   .markdown-content tr:nth-child(even) {
@@ -229,6 +252,28 @@
     padding: 0;
     display: block;
     line-height: 1.5;
+  }
+  
+  /* Copy button styling */
+  .message-copy-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.375rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+  }
+  
+  /* Make the copy button visible on message hover */
+  .message-container:hover .message-copy-button {
+    opacity: 1;
+  }
+  
+  .message-copy-button:hover {
+    background-color: rgba(255, 255, 255, 0.25);
   }
   
   /* PWA specific styles */

@@ -1,10 +1,11 @@
 import { MessageProps } from "@/types";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import MelodicLogo from "./MelodicLogo";
 import { User, Copy, Check } from "lucide-react";
 // Import additional components for better markdown rendering
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Message({ message }: MessageProps) {
@@ -47,7 +48,7 @@ export default function Message({ message }: MessageProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex items-start ${isUser ? 'justify-end max-w-xl ml-auto' : 'max-w-xl'} fade-in`}
+      className={`flex items-start ${isUser ? 'justify-end max-w-xl ml-auto' : 'max-w-xl'} fade-in message-container`}
     >
       {!isUser && (
         <div className="flex-shrink-0 w-10 h-10 mr-2 flex items-center">
@@ -59,8 +60,7 @@ export default function Message({ message }: MessageProps) {
         {/* Copy button */}
         <button 
           onClick={handleCopy}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/10 text-white 
-                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/20"
+          className="message-copy-button group-hover:opacity-100 z-10"
           title={`Copy ${isUser ? 'your message' : 'response'} to clipboard`}
           aria-label={`Copy ${isUser ? 'your message' : 'response'} to clipboard`}
         >
@@ -73,6 +73,7 @@ export default function Message({ message }: MessageProps) {
 
         <div className="markdown-content">
           <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             components={{
               // Customize table rendering
               table: ({ node, ...props }) => (
