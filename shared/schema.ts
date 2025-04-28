@@ -11,6 +11,7 @@ export const users = pgTable("users", {
 export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
+  sessionId: text("session_id").notNull(), // Session ID to group messages
   role: text("role").notNull(), // 'user' or 'assistant'
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
