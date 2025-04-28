@@ -4,8 +4,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import path from "path";
 import express from "express";
-import { handleOpenRouterSearch } from "./openrouter";
-import { generateChatResponse } from "./openai";
+import { generateChatResponse } from "./openrouter.unified";
 import { generateSessionId } from "./context";
 
 const chatRequestSchema = z.object({
@@ -48,11 +47,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let { message, apiKey, model, sessionId, conversationHistory } = validation.data;
       
-      // If the client is requesting to use the environment API key
-      if (apiKey === "use_env") {
-        apiKey = process.env.OPENAI_API_KEY || "";
-        if (!apiKey) {
-          return res.status(500).json({ message: "OpenAI API key not found in environment variables" });
+      // OpenRouter uses environment variable - we don't need the API key from client anymore
+      // Keep this for backward compatibility with the client
+      if (apiKey === "use_env" || true) { // Always use the environment variable now
+        // We'll use OPENROUTER_API_KEY from the environment
+        if (!process.env.OPENROUTER_API_KEY) {
+          return res.status(500).json({ message: "OpenRouter API key not found in environment variables" });
         }
       }
       
@@ -61,14 +61,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId = generateSessionId();
       }
       
-      // Send request to OpenAI with conversation history
+      // Send request to OpenRouter with conversation history
       const response = await generateChatResponse({
-        apiKey,
         message,
-        model,
+        model: "openai/gpt-4o-mini-search-preview", // Override with the OpenRouter model
         sessionId,
         conversationHistory,
-        systemPrompt: "You are Melodic, a helpful, creative, and musically-inclined AI assistant. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. Format your responses with multiple paragraphs for better readability. Use markdown formatting like **bold**, *italic*, and bullet points where appropriate. Use emojis where appropriate, especially music-related ones."
+        systemPrompt: "You are Melodic, a helpful, creative, and musically-inclined AI assistant with real-time web search capabilities. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses. When searching for information online, cite your sources with numbered links at the end of your response. Format your responses with multiple paragraphs for better readability. Use markdown formatting like **bold**, *italic*, and bullet points where appropriate. Use emojis where appropriate, especially music-related ones."
       });
       
       // Add the sessionId to the response so the client can store it
@@ -79,15 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(responseWithSessionId);
     } catch (error: any) {
-      console.error("OpenAI API error:", error);
-      
-      // Handle different error types
-      if (error.response) {
-        // OpenAI API error
-        return res.status(error.response.status || 500).json({
-          message: error.response.data?.error?.message || "OpenAI API error",
-        });
-      }
+      console.error("OpenRouter API error:", error);
       
       // Network or other errors
       res.status(500).json({
@@ -96,8 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // OpenRouter web search endpoint
-  app.post('/api/search', handleOpenRouterSearch);
+  // We no longer need a separate search endpoint as search is integrated directly in chat
 
   const httpServer = createServer(app);
   return httpServer;
