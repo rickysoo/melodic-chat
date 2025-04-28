@@ -163,6 +163,10 @@
     margin-bottom: 0.75rem;
   }
   
+  .markdown-content li {
+    margin-bottom: 0.25rem;
+  }
+  
   .markdown-content h1, 
   .markdown-content h2, 
   .markdown-content h3, 
@@ -193,6 +197,38 @@
     border-radius: 0.3rem;
     overflow-x: auto;
     margin-bottom: 0.75rem;
+  }
+  
+  /* Table styling */
+  .markdown-content table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    width: 100%;
+  }
+  
+  .markdown-content th {
+    padding: 0.5rem;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .markdown-content td {
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .markdown-content tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Enhance code blocks */
+  .markdown-content pre code {
+    background-color: transparent;
+    padding: 0;
+    display: block;
+    line-height: 1.5;
   }
   
   /* PWA specific styles */

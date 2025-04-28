@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import MelodicLogo from "./MelodicLogo";
 import { User } from "lucide-react";
+// Import additional components for better markdown rendering
+import { Fragment } from "react";
 
 export default function Message({ message }: MessageProps) {
   const isUser = message.role === "user";
@@ -25,7 +27,55 @@ export default function Message({ message }: MessageProps) {
       
       <div className={`${isUser ? 'chat-gradient-user' : 'chat-gradient-bot'} text-white px-4 py-3 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-sm`}>
         <div className="markdown-content">
-          <ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              // Customize table rendering
+              table: ({ node, ...props }) => (
+                <div className="overflow-x-auto my-4">
+                  <table className="w-full border-collapse border border-gray-300 bg-white/10" {...props} />
+                </div>
+              ),
+              thead: ({ node, ...props }) => (
+                <thead className="bg-white/20" {...props} />
+              ),
+              tbody: ({ node, ...props }) => (
+                <tbody {...props} />
+              ),
+              tr: ({ node, ...props }) => (
+                <tr className="border-b border-gray-300" {...props} />
+              ),
+              th: ({ node, ...props }) => (
+                <th className="border border-gray-300 px-4 py-2 text-left font-semibold" {...props} />
+              ),
+              td: ({ node, ...props }) => (
+                <td className="border border-gray-300 px-4 py-2" {...props} />
+              ),
+              // Better list rendering
+              ul: ({ node, ...props }) => (
+                <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />
+              ),
+              ol: ({ node, ...props }) => (
+                <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />
+              ),
+              li: ({ node, children, ...props }) => (
+                <li className="mb-1" {...props}>{children}</li>
+              ),
+              // Better heading styles
+              h1: ({node, ...props}) => (
+                <h1 className="text-xl font-bold mt-4 mb-2" {...props} />
+              ),
+              h2: ({node, ...props}) => (
+                <h2 className="text-lg font-bold mt-3 mb-2" {...props} />
+              ),
+              h3: ({node, ...props}) => (
+                <h3 className="text-md font-bold mt-2 mb-1" {...props} />
+              ),
+              // Standard paragraph with proper spacing
+              p: ({node, ...props}) => (
+                <p className="mb-4 last:mb-0" {...props} />
+              ),
+            }}
+          >
             {displayContent}
           </ReactMarkdown>
         </div>
