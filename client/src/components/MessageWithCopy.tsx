@@ -7,8 +7,8 @@ import { User, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function Message({ message }: MessageProps) {
-  console.log("Message component rendered with updated copy button!");
+export default function MessageWithCopy({ message }: MessageProps) {
+  console.log("MessageWithCopy component rendered - new version!");
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -50,17 +50,17 @@ export default function Message({ message }: MessageProps) {
       )}
       
       <div className={`${isUser ? 'chat-gradient-user' : 'chat-gradient-bot'} text-white px-4 py-3 pb-4 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-sm relative`}>
-        {/* Copy button - with text label for better visibility */}
+        {/* Large Copy button for visibility */}
         <button 
           onClick={handleCopy}
-          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/30 text-white hover:bg-white/50 border border-white/30 flex items-center gap-1"
+          className="absolute top-2 right-2 px-2 py-1 rounded-md bg-primary-500 text-white hover:bg-primary-600 border border-white/30 flex items-center gap-1 shadow-md"
           title={`Copy ${isUser ? 'your message' : 'response'} to clipboard`}
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
           <span className="text-xs font-semibold">{copied ? "Copied!" : "Copy"}</span>
         </button>
 
-        <div className="markdown-content pr-16">
+        <div className="markdown-content pr-20 mt-2">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {displayContent}
           </ReactMarkdown>

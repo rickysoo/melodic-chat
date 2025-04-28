@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import Message from "@/components/Message";
+import MessageWithCopy from "@/components/MessageWithCopy";
 import { MessageThreadProps } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile, useIsPwa } from "@/hooks/use-mobile";
