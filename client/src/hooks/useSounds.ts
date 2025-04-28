@@ -205,8 +205,21 @@ export function useSounds() {
 
   // Play themed notes based on the selected theme
   const playThemedNotes = useCallback((type: 'send' | 'receive', messageLength?: number) => {
+    // Debug log
+    console.log('Playing themed sound:', { 
+      type, 
+      theme: settings.theme, 
+      enabled: settings.enabled,
+      volume: settings.volume,
+      intensity: settings.intensity,
+      messageLength
+    });
+    
     // If sounds are disabled, don't play anything
-    if (!settings.enabled) return;
+    if (!settings.enabled) {
+      console.log('Sounds are disabled, not playing');
+      return;
+    }
     
     const theme = themes[settings.theme];
     const notes = theme[type].notes;
@@ -225,6 +238,14 @@ export function useSounds() {
     notes.forEach((note, index) => {
       setTimeout(() => {
         const volume = getEffectiveVolume(index === notes.length - 1 ? 0.15 : 0.12);
+        console.log('Playing note:', { 
+          frequency: note.frequency, 
+          duration: note.duration, 
+          waveform, 
+          volume,
+          theme: settings.theme,
+          noteIndex: index
+        });
         playNote(note.frequency, note.duration, waveform, volume);
       }, delay);
       delay += note.duration;
