@@ -10,6 +10,8 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottom] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const prevMessagesLength = useRef(messages.length);
   const isMobile = useIsMobile();
   const isPwa = useIsPwa();
 
@@ -34,10 +36,24 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
     }
   }, []);
 
+  // Track new messages and update unread count
+  useEffect(() => {
+    if (messages.length > prevMessagesLength.current) {
+      // If not at bottom, increment unread count
+      if (!atBottom) {
+        const newCount = messages.length - prevMessagesLength.current;
+        setUnreadCount(prev => prev + newCount);
+      }
+    }
+    prevMessagesLength.current = messages.length;
+  }, [messages, atBottom]);
+
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (atBottom) {
       scrollToBottom();
+      // Reset unread count when at bottom
+      setUnreadCount(0);
     }
   }, [messages, isTyping, atBottom]);
 
@@ -55,16 +71,47 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
       <AnimatePresence>
         {!atBottom && messages.length > 0 && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-4 right-4 z-10 p-2 bg-primary-500 text-white rounded-full shadow-lg"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 260,
+                damping: 20
+              }
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            className={`absolute bottom-6 right-6 z-10 p-3 ${unreadCount > 0 ? 'bg-red-500' : 'bg-primary'} text-white rounded-full shadow-xl flex items-center justify-center gap-2 font-medium border-2 border-white dark:border-gray-800 min-w-[42px] min-h-[42px]`}
             onClick={() => scrollToBottom()}
+            aria-label="Scroll to bottom"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <polyline points="19 12 12 19 5 12"></polyline>
-            </svg>
+            <span className="hidden sm:inline">
+              {unreadCount > 0 ? `${unreadCount} new message${unreadCount > 1 ? 's' : ''}` : 'New messages'}
+            </span>
+            {unreadCount > 0 && (
+              <span className="flex items-center justify-center h-5 w-5 sm:hidden text-xs bg-white text-red-500 font-bold rounded-full">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+            <motion.div
+              animate={{
+                scale: unreadCount > 0 ? [1, 1.1, 1] : 1
+              }}
+              transition={{
+                duration: 1,
+                repeat: unreadCount > 0 ? Infinity : 0,
+                repeatType: "reverse"
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+            </motion.div>
           </motion.button>
         )}
       </AnimatePresence>
