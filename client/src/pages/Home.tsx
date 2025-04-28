@@ -10,7 +10,7 @@ import { useIsMobile, useIsPwa } from "@/hooks/use-mobile";
 
 export default function Home() {
   // State hooks
-  const [model, setModel] = useState<string>("gpt-4o-mini");
+  const [model, setModel] = useState<string>("openai/gpt-4o-mini-search-preview");
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
@@ -23,7 +23,7 @@ export default function Home() {
   
   // Load saved model on mount and check if PWA is installable
   useEffect(() => {
-    const savedModel = localStorage.getItem("melodic_model") || "gpt-4o-mini";
+    const savedModel = localStorage.getItem("melodic_model") || "openai/gpt-4o-mini-search-preview";
     setModel(savedModel);
     
     // Add event listener for PWA installation

@@ -113,8 +113,8 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
       // Send request to server with conversation history
       const response = await apiRequest('POST', '/api/chat', {
         message: content,
-        apiKey: apiKey === "env" ? "use_env" : apiKey, // Signal server to use env variable
-        model,
+        apiKey: apiKey === "env" ? "use_env" : apiKey, // Signal server to use env variable 
+        model, // Now using OpenRouter model specified in Home.tsx
         sessionId: sessionId || undefined,
         conversationHistory: formattedHistory
       });
