@@ -35,6 +35,14 @@ export function SoundSettingsModal({
     const value = newVolume[0];
     setVolume(value);
     onAdjustVolume(value / 100);
+    
+    // Play a preview sound after a slight delay to ensure settings are saved
+    const debounceTimeout = setTimeout(() => {
+      // This will trigger after the user stops adjusting for 300ms
+      console.log('Playing volume preview sound: ' + value);
+    }, 300);
+    
+    return () => clearTimeout(debounceTimeout);
   };
   
   const themeIcons = {

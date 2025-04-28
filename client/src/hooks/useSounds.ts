@@ -196,37 +196,78 @@ export function useSounds() {
 
   // Calculate effective volume based on settings
   const getEffectiveVolume = useCallback((baseVolume: number) => {
-    if (!settings.enabled) return 0;
+    // Get current settings from local storage for immediate access
+    const currentSettings = (() => {
+      try {
+        const savedSettings = localStorage.getItem('melodic_sound_settings');
+        if (savedSettings) {
+          return JSON.parse(savedSettings) as SoundSettings;
+        }
+      } catch (e) {
+        console.error('Failed to load sound settings from storage for volume calculation:', e);
+      }
+      return settings; // Fallback to state if localStorage fails
+    })();
+    
+    if (!currentSettings.enabled) return 0;
     
     // Apply intensity factor to base volume
-    const intensityFactor = intensityFactors[settings.intensity] || 1.0;
-    return Math.min(1.0, baseVolume * settings.volume * intensityFactor);
+    const intensityFactor = intensityFactors[currentSettings.intensity] || 1.0;
+    const effectiveVolume = Math.min(1.0, baseVolume * currentSettings.volume * intensityFactor);
+    
+    console.log('Calculated effective volume:', {
+      baseVolume,
+      userVolume: currentSettings.volume,
+      intensity: currentSettings.intensity,
+      intensityFactor,
+      effectiveVolume
+    });
+    
+    return effectiveVolume;
   }, [settings]);
 
   // Play themed notes based on the selected theme
   const playThemedNotes = useCallback((type: 'send' | 'receive', messageLength?: number) => {
+    // Get current settings from local storage for immediate access
+    const currentSettings = (() => {
+      try {
+        const savedSettings = localStorage.getItem('melodic_sound_settings');
+        if (savedSettings) {
+          return JSON.parse(savedSettings) as SoundSettings;
+        }
+      } catch (e) {
+        console.error('Failed to load sound settings from storage:', e);
+      }
+      return settings; // Fallback to state if localStorage fails
+    })();
+    
     // Debug log
-    console.log('Playing themed sound:', { 
+    console.log('Playing themed sound with realtime settings:', { 
       type, 
-      theme: settings.theme, 
-      enabled: settings.enabled,
-      volume: settings.volume,
-      intensity: settings.intensity,
+      theme: currentSettings.theme, 
+      enabled: currentSettings.enabled,
+      volume: currentSettings.volume,
+      intensity: currentSettings.intensity,
       messageLength
     });
     
     // If sounds are disabled, don't play anything
-    if (!settings.enabled) {
+    if (!currentSettings.enabled) {
       console.log('Sounds are disabled, not playing');
       return;
     }
     
-    const theme = themes[settings.theme];
+    const theme = themes[currentSettings.theme];
+    if (!theme) {
+      console.error('Theme not found:', currentSettings.theme);
+      return;
+    }
+    
     const notes = theme[type].notes;
     const waveform = theme.waveform;
     
     // Adjust intensity based on message length if provided
-    let intensityFactor = intensityFactors[settings.intensity];
+    let intensityFactor = intensityFactors[currentSettings.intensity] || 1.0;
     if (messageLength && type === 'receive') {
       // Slightly increase intensity for longer messages
       if (messageLength > 500) intensityFactor *= 1.1;
@@ -243,7 +284,7 @@ export function useSounds() {
           duration: note.duration, 
           waveform, 
           volume,
-          theme: settings.theme,
+          theme: currentSettings.theme,
           noteIndex: index
         });
         playNote(note.frequency, note.duration, waveform, volume);
@@ -264,10 +305,14 @@ export function useSounds() {
   
   // Function to change the sound theme
   const changeTheme = useCallback((theme: SoundTheme) => {
+    console.log('Changing theme to:', theme);
     updateSettings({ theme });
     
-    // Play a test sound to preview the theme
-    playThemedNotes('send');
+    // Play a test sound to preview the theme with a small delay to ensure settings are updated
+    setTimeout(() => {
+      console.log('Playing preview sound for theme:', theme);
+      playThemedNotes('send');
+    }, 100);
   }, [updateSettings, playThemedNotes]);
   
   // Function to adjust volume (0 to 1)
