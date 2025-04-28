@@ -1,1 +1,1 @@
-[https](https://melodic-chat.replit.app/)
+Use it at https://melodic-chat.replit.app
