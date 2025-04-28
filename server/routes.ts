@@ -138,6 +138,7 @@ Use emojis where appropriate, especially music-related ones like 🎵, 🎶, �
           role: 'user',
           content: message,
           sessionId,
+          // userId is optional and can be added when authentication is implemented
         });
         
         // Store assistant response
@@ -146,6 +147,7 @@ Use emojis where appropriate, especially music-related ones like 🎵, 🎶, �
           role: 'assistant',
           content: assistantMessage,
           sessionId,
+          // userId is optional and can be added when authentication is implemented
         });
       } catch (dbError) {
         console.error("Failed to store messages in database:", dbError);

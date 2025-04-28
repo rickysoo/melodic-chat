@@ -53,12 +53,15 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
-  userId: true,
-  sessionId: true,
-  role: true,
-  content: true,
-});
+export const insertChatMessageSchema = createInsertSchema(chatMessages)
+  .pick({
+    sessionId: true,
+    role: true,
+    content: true,
+  })
+  .merge(z.object({
+    userId: z.number().optional(),
+  }));
 
 export const insertUserContextSchema = createInsertSchema(userContexts).pick({
   sessionId: true,
