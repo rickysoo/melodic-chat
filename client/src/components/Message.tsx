@@ -48,17 +48,18 @@ export default function Message({ message }: MessageProps) {
         </div>
       )}
       
-      <div className={`${isUser ? 'chat-gradient-user' : 'chat-gradient-bot'} text-white px-4 py-3 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-sm relative`}>
-        {/* Copy button - always visible */}
+      <div className={`${isUser ? 'chat-gradient-user' : 'chat-gradient-bot'} text-white px-4 py-3 pb-4 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-sm relative`}>
+        {/* Copy button - with text label for better visibility */}
         <button 
           onClick={handleCopy}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 text-white hover:bg-white/30"
+          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/30 text-white hover:bg-white/50 border border-white/30 flex items-center gap-1"
           title={`Copy ${isUser ? 'your message' : 'response'} to clipboard`}
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
+          <span className="text-xs font-semibold">{copied ? "Copied!" : "Copy"}</span>
         </button>
 
-        <div className="markdown-content pr-8">
+        <div className="markdown-content pr-16">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {displayContent}
           </ReactMarkdown>
