@@ -2,15 +2,45 @@ import { MessageProps } from "@/types";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import MelodicLogo from "./MelodicLogo";
-import { User } from "lucide-react";
+import { User, Copy, Check } from "lucide-react";
 // Import additional components for better markdown rendering
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Message({ message }: MessageProps) {
   const isUser = message.role === "user";
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
   
   // Just use the message content directly
   const displayContent = message.content;
+  
+  // Handle copy button click
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(displayContent);
+      setCopied(true);
+      
+      // Show toast notification
+      toast({
+        title: "Copied to clipboard",
+        description: `${isUser ? "Your message" : "Melodic's response"} has been copied to clipboard.`,
+        duration: 2000,
+      });
+      
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+      toast({
+        title: "Copy failed",
+        description: "Could not copy to clipboard. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <motion.div 
@@ -25,7 +55,22 @@ export default function Message({ message }: MessageProps) {
         </div>
       )}
       
-      <div className={`${isUser ? 'chat-gradient-user' : 'chat-gradient-bot'} text-white px-4 py-3 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-sm`}>
+      <div className={`${isUser ? 'chat-gradient-user' : 'chat-gradient-bot'} text-white px-4 py-3 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-sm relative group`}>
+        {/* Copy button */}
+        <button 
+          onClick={handleCopy}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/10 text-white 
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/20"
+          title={`Copy ${isUser ? 'your message' : 'response'} to clipboard`}
+          aria-label={`Copy ${isUser ? 'your message' : 'response'} to clipboard`}
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </button>
+
         <div className="markdown-content">
           <ReactMarkdown
             components={{
