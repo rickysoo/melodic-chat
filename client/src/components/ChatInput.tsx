@@ -3,13 +3,11 @@ import { ChatInputProps } from "@/types";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useIsMobile, useIsPwa } from "@/hooks/use-mobile";
-import { Send, Search } from "lucide-react";
-import { PerplexitySearchModal } from "./PerplexitySearchModal";
+import { Send } from "lucide-react";
 
 export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
   const isPwa = useIsPwa();
@@ -61,13 +59,7 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
     };
   }, [isMobile]);
 
-  // Handle search result from Perplexity
-  const handleSearchResult = (searchResult: string) => {
-    // Send the search result as a message
-    if (searchResult.trim()) {
-      onSendMessage(`[Web search result]\n\n${searchResult}`);
-    }
-  };
+  // No search functionality needed anymore as OpenRouter has integrated search
 
   return (
     <div className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 ${isMobile && isPwa ? 'pb-safe' : ''}`}>
@@ -92,18 +84,6 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
           />
         </div>
         
-        {/* Web search button */}
-        <motion.button 
-          type="button"
-          onClick={() => setIsSearchModalOpen(true)}
-          whileTap={{ scale: 0.95 }}
-          disabled={disabled}
-          className="bg-secondary-500 hover:bg-secondary-600 text-white rounded-full p-3 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500 transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Search the web"
-        >
-          <Search className="h-5 w-5" />
-        </motion.button>
-        
         {/* Send message button */}
         <motion.button 
           type="submit" 
@@ -117,13 +97,6 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
       
       {/* Mobile keyboard spacer - helps prevent content jumping when keyboard shows/hides */}
       {isMobile && isFocused && <div className="h-36 sm:h-0" />}
-      
-      {/* Search modal */}
-      <PerplexitySearchModal 
-        isOpen={isSearchModalOpen} 
-        onClose={() => setIsSearchModalOpen(false)}
-        onSearch={handleSearchResult}
-      />
     </div>
   );
 }
