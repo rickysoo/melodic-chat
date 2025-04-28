@@ -43,9 +43,19 @@ export default function Header({ onClearChat }: HeaderProps) {
     <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-3">
         <MelodicLogo size={32} />
-        <h1 className="font-heading font-bold text-xl sm:text-2xl" style={{ color: "#6D28D9" }}>
+        <span style={{ 
+            fontWeight: "bold", 
+            fontSize: "1.5rem", 
+            color: "rgb(109, 40, 217)",
+            fontFamily: "var(--font-poppins)",
+            background: "none",
+            backgroundClip: "initial",
+            WebkitBackgroundClip: "initial",
+            WebkitTextFillColor: "initial",
+            textShadow: "none"
+          }}>
           Melodic
-        </h1>
+        </span>
       </div>
       
       <div className="flex items-center space-x-3">
