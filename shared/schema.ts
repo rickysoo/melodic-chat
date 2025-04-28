@@ -55,6 +55,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   userId: true,
+  sessionId: true,
   role: true,
   content: true,
 });

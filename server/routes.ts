@@ -6,6 +6,7 @@ import path from "path";
 import express from "express";
 import { generateChatResponse } from "./openrouter.unified";
 import { generateSessionId } from "./context";
+import { insertChatMessageSchema } from "@shared/schema";
 
 const chatRequestSchema = z.object({
   message: z.string(),
@@ -36,6 +37,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   }));
+  
+  // Messages API endpoints
+  app.get('/api/messages/:sessionId', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      
+      const messages = await storage.getMessages(sessionId, limit);
+      res.json(messages);
+    } catch (error: any) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch messages" });
+    }
+  });
+  
+  app.post('/api/messages', async (req, res) => {
+    try {
+      // Validate the message data
+      const validation = insertChatMessageSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid message data", 
+          errors: validation.error.errors 
+        });
+      }
+      
+      const messageData = validation.data;
+      const savedMessage = await storage.createMessage(messageData);
+      res.status(201).json(savedMessage);
+    } catch (error: any) {
+      console.error("Error saving message:", error);
+      res.status(500).json({ message: error.message || "Failed to save message" });
+    }
+  });
+  
+  app.delete('/api/messages/:sessionId', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      await storage.deleteAllMessages(sessionId);
+      res.status(200).json({ message: "All messages deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting messages:", error);
+      res.status(500).json({ message: error.message || "Failed to delete messages" });
+    }
+  });
   // Chat endpoint
   app.post('/api/chat', async (req, res) => {
     try {
@@ -83,6 +130,27 @@ Format your responses with proper markdown:
 
 Use emojis where appropriate, especially music-related ones like 🎵, 🎶, 🎸, but don't overuse them.`
       });
+      
+      // Store both the user message and assistant response in the database
+      try {
+        // Store user message
+        await storage.createMessage({
+          role: 'user',
+          content: message,
+          sessionId,
+        });
+        
+        // Store assistant response
+        const assistantMessage = response.choices[0].message.content;
+        await storage.createMessage({
+          role: 'assistant',
+          content: assistantMessage,
+          sessionId,
+        });
+      } catch (dbError) {
+        console.error("Failed to store messages in database:", dbError);
+        // Continue anyway - this is not critical for the response
+      }
       
       // Add the sessionId to the response so the client can store it
       const responseWithSessionId = {

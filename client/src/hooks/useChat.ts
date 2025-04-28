@@ -62,15 +62,74 @@ const saveSessionId = (sessionId: string) => {
 };
 
 export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: UseChatProps) {
-  // Initialize with messages from localStorage
+  // Initialize with empty messages, we'll load them from storage or db
   const [state, setState] = useState<ChatState>({
-    messages: loadMessagesFromStorage(),
+    messages: [],
     isTyping: false,
     error: null
   });
   
   // Load or initialize the session ID
   const [sessionId, setSessionId] = useState<string | null>(loadSessionId());
+  
+  // Load messages from database if sessionId exists
+  useEffect(() => {
+    if (!sessionId) {
+      // If no sessionId, fall back to localStorage
+      setState(prev => ({
+        ...prev,
+        messages: loadMessagesFromStorage()
+      }));
+      return;
+    }
+    
+    // Function to load messages from the database
+    const loadMessagesFromDB = async () => {
+      try {
+        const response = await fetch(`/api/messages/${sessionId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch messages: ${response.status}`);
+        }
+        
+        const dbMessages = await response.json();
+        
+        // If we have messages from the database, use those
+        if (dbMessages && dbMessages.length > 0) {
+          // Transform to our Message format with nanoid ids
+          const formattedMessages: Message[] = dbMessages.map((msg: any) => ({
+            id: nanoid(),
+            role: msg.role,
+            content: msg.content,
+            timestamp: new Date(msg.createdAt).getTime()
+          }));
+          
+          setState(prev => ({
+            ...prev,
+            messages: formattedMessages
+          }));
+          
+          // Save to localStorage as backup
+          saveMessagesToStorage(formattedMessages);
+        } else {
+          // If no messages in DB, fall back to localStorage
+          setState(prev => ({
+            ...prev,
+            messages: loadMessagesFromStorage()
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load messages from database:', error);
+        // Fall back to localStorage if DB fetch fails
+        setState(prev => ({
+          ...prev,
+          messages: loadMessagesFromStorage()
+        }));
+      }
+    };
+    
+    loadMessagesFromDB();
+  }, [sessionId]);
 
   const sendMessage = useCallback(async (content: string) => {
     // Add user message to state
@@ -166,14 +225,42 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
   }, [apiKey, model, onMessageSent, onMessageReceived, sessionId]);
 
   // Function to clear chat history
-  const clearChatHistory = useCallback(() => {
-    localStorage.removeItem('melodic_chat_messages');
-    setState({
-      messages: [],
-      isTyping: false,
-      error: null
-    });
-  }, []);
+  const clearChatHistory = useCallback(async () => {
+    if (!sessionId) {
+      // If no sessionId, just clear local storage
+      localStorage.removeItem('melodic_chat_messages');
+      setState({
+        messages: [],
+        isTyping: false,
+        error: null
+      });
+      return;
+    }
+    
+    try {
+      // Delete messages from the database
+      await fetch(`/api/messages/${sessionId}`, {
+        method: 'DELETE',
+      });
+      
+      // Clear local storage and state
+      localStorage.removeItem('melodic_chat_messages');
+      setState({
+        messages: [],
+        isTyping: false,
+        error: null
+      });
+    } catch (error) {
+      console.error('Failed to clear chat history from database:', error);
+      // Still clear local even if DB fails
+      localStorage.removeItem('melodic_chat_messages');
+      setState({
+        messages: [],
+        isTyping: false,
+        error: null
+      });
+    }
+  }, [sessionId]);
 
   return {
     ...state,
