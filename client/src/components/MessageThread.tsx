@@ -105,7 +105,7 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
           )}
 
           {messages.map((message) => (
-            <Message key={message.id} message={message} />
+            <MessageWithCopy key={message.id} message={message} />
           ))}
 
           {isTyping && (
