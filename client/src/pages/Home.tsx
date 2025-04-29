@@ -3,16 +3,21 @@ import Header from "@/components/Header";
 import MessageThread from "@/components/MessageThread";
 import ChatInput from "@/components/ChatInput";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
+import WebSearchBanner from "@/components/WebSearchBanner";
+import LoginModal from "@/components/LoginModal";
+import UserAvatar from "@/components/UserAvatar";
 import { useChat } from "@/hooks/useChat";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/useSounds";
 import { useIsMobile, useIsPwa } from "@/hooks/use-mobile";
+import { useAuth } from "@/lib/authContext";
 
 export default function Home() {
   // State hooks
   const [model, setModel] = useState<string>("openai/gpt-4o-mini-search-preview");
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
   
   // Other hooks
@@ -20,6 +25,7 @@ export default function Home() {
   const { playSound, unlockAudioContext } = useSounds();
   const isMobile = useIsMobile();
   const isPwa = useIsPwa();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   
   // Load saved model on mount and check if PWA is installable
   useEffect(() => {
@@ -85,10 +91,11 @@ export default function Home() {
     };
   }, [unlockAudioContext]);
   
-  // Chat hook
+  // Chat hook with authentication status
   const { messages, isTyping, sendMessage, clearChatHistory, error } = useChat({
     apiKey: "env", // Use environment variable
     model,
+    isAuthenticated, // Pass authentication status for model selection
     onMessageSent,
     onMessageReceived
   });
@@ -124,6 +131,23 @@ export default function Home() {
     setIsInstallable(false);
   }, [installPromptEvent]);
 
+  // Authentication handlers
+  const handleOpenLoginModal = useCallback(() => {
+    setIsLoginModalOpen(true);
+  }, []);
+
+  const handleCloseLoginModal = useCallback(() => {
+    setIsLoginModalOpen(false);
+  }, []);
+
+  const handleLoginSuccess = useCallback(() => {
+    setIsLoginModalOpen(false);
+    toast({
+      title: "Login successful",
+      description: "You now have access to web search capabilities!",
+    });
+  }, [toast]);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messageEndRef.current) {
@@ -134,10 +158,18 @@ export default function Home() {
   return (
     <div className={`h-screen flex flex-col bg-background text-foreground overflow-hidden ${isPwa ? 'pwa-mode' : ''}`}>
       {/* Don't show header in PWA mode on mobile - header will be visible on larger screens */}
-      {!(isPwa && isMobile) && <Header onClearChat={clearChatHistory} />}
+      {!(isPwa && isMobile) && (
+        <div className="flex justify-between items-center">
+          <Header onClearChat={clearChatHistory} />
+          <UserAvatar onLogin={handleOpenLoginModal} />
+        </div>
+      )}
       
       {/* Main chat container */}
       <main className={`flex-1 flex flex-col overflow-hidden relative ${isPwa && isMobile ? 'pt-2' : ''}`}>
+        {/* Show web search banner for non-authenticated users */}
+        {!authLoading && !isAuthenticated && <WebSearchBanner onLogin={handleOpenLoginModal} />}
+        
         <MessageThread messages={messages} isTyping={isTyping} />
         <div ref={messageEndRef} />
         
@@ -146,6 +178,13 @@ export default function Home() {
       
       {/* PWA install prompt component - handles all installation UI */}
       {!isPwa && <PwaInstallPrompt />}
+      
+      {/* Authentication modal */}
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={handleCloseLoginModal} 
+        onSuccess={handleLoginSuccess} 
+      />
     </div>
   );
 }

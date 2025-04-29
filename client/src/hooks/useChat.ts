@@ -62,7 +62,7 @@ const saveSessionId = (sessionId: string) => {
   }
 };
 
-export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: UseChatProps) {
+export function useChat({ apiKey, model, isAuthenticated = false, onMessageSent, onMessageReceived }: UseChatProps) {
   // Initialize with empty messages, we'll load them from storage or db
   const [state, setState] = useState<ChatState>({
     messages: [],
@@ -170,12 +170,13 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
         content: msg.content
       }));
 
-      // Send request to server with conversation history
+      // Send request to server with conversation history and authentication status
       const response = await apiRequest('POST', '/api/chat', {
         message: content,
         apiKey: apiKey === "env" ? "use_env" : apiKey, // Signal server to use env variable 
         model, // Now using OpenRouter model specified in Home.tsx
         sessionId: sessionId || undefined,
+        isAuthenticated, // Include authentication status to determine model access
         conversationHistory: formattedHistory
       });
 
@@ -223,7 +224,7 @@ export function useChat({ apiKey, model, onMessageSent, onMessageReceived }: Use
         error: error instanceof Error ? error.message : 'Failed to send message'
       }));
     }
-  }, [apiKey, model, onMessageSent, onMessageReceived, sessionId]);
+  }, [apiKey, model, isAuthenticated, onMessageSent, onMessageReceived, sessionId]);
 
   // Function to clear chat history
   const clearChatHistory = useCallback(async () => {
