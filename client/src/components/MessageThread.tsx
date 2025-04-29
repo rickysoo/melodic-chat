@@ -78,34 +78,49 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
           scrollToBottom();
           setUnreadCount(0);
         } 
-        // For longer messages, scroll down just enough to show the start of the response
+        // For longer messages, scroll to show both user prompt and assistant's first paragraph
         else {
-          // Find the last message element
+          // Find message elements
           const allMessages = thread.querySelectorAll('[id^="message-"]');
-          const lastMessageElement = allMessages[allMessages.length - 1];
+          const lastMessageIndex = allMessages.length - 1;
+          const assistantMessageElement = allMessages[lastMessageIndex];
           
-          if (lastMessageElement) {
+          // Find the user's message that came before assistant's response
+          let userMessageElement = null;
+          if (lastMessageIndex > 0) {
+            userMessageElement = allMessages[lastMessageIndex - 1];
+          }
+          
+          if (assistantMessageElement) {
             // Get the content area with the text
-            const contentArea = lastMessageElement.querySelector('.markdown-content');
+            const contentArea = assistantMessageElement.querySelector('.markdown-content');
             if (contentArea) {
               // Get the first paragraph element
               const firstParagraph = contentArea.querySelector('p');
               
-              if (firstParagraph) {
-                // Calculate the position to ensure first sentence (paragraph) is visible
-                // Get the element's position relative to the viewport
-                const rect = lastMessageElement.getBoundingClientRect();
+              // Scroll to show both the user's message and the AI's first paragraph
+              if (userMessageElement && firstParagraph) {
+                // Calculate how to position the scroll to show both messages
+                const userRect = userMessageElement.getBoundingClientRect();
+                const assistantRect = assistantMessageElement.getBoundingClientRect();
                 const threadRect = thread.getBoundingClientRect();
                 
-                // Calculate where to scroll to show just the beginning of the message
-                // We add a small offset (-20) to show a bit more context
-                const scrollAmount = thread.scrollTop + (rect.top - threadRect.top) - 20;
+                // Scroll to position where user message is at the top and first part of AI response is visible
+                // We use a different calculation based on whether both can fit on screen
+                const canBothFitOnScreen = (assistantRect.top + 100) - userRect.top < threadHeight;
                 
-                // Scroll to show the first sentence and leave room at the bottom for the input
-                thread.scrollTop = scrollAmount;
+                if (canBothFitOnScreen) {
+                  // If both can fit, show both completely
+                  const scrollAmount = thread.scrollTop + (userRect.top - threadRect.top) - 20;
+                  thread.scrollTop = scrollAmount;
+                } else {
+                  // If both can't fit, show user message at top and part of AI response below
+                  const scrollAmount = thread.scrollTop + (userRect.top - threadRect.top) - 20;
+                  thread.scrollTop = scrollAmount;
+                }
               } else {
-                // Fallback if we can't find paragraphs - just show the message top
-                lastMessageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Fallback - show at least the assistant's message if no user message found
+                assistantMessageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
               
               // Indicate there's more to read
