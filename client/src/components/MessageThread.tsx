@@ -54,17 +54,56 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
     prevMessagesLength.current = messages.length;
   }, [messages, atBottom]);
 
-  // Scroll to bottom only on user messages or typing indicators
+  // Smart scroll behavior for all messages
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     
-    // Only scroll to bottom automatically for user messages or typing indicators
-    if (atBottom && (lastMessage?.role === 'user' || isTyping)) {
-      scrollToBottom();
-      // Reset unread count when at bottom
-      setUnreadCount(0);
+    if (lastMessage) {
+      // Always scroll for user messages or typing indicators
+      if (lastMessage.role === 'user' || isTyping) {
+        scrollToBottom();
+        setUnreadCount(0);
+      } 
+      // For assistant messages, use smart scrolling
+      else if (lastMessage.role === 'assistant') {
+        // Get thread container dimensions
+        const thread = threadRef.current;
+        if (!thread) return;
+        
+        const threadHeight = thread.clientHeight;
+        const messageHeight = estimateMessageHeight(lastMessage.content);
+        
+        // If message is relatively short (should fit on screen), scroll to bottom
+        if (messageHeight < threadHeight * 0.8) {
+          scrollToBottom();
+          setUnreadCount(0);
+        } 
+        // For longer messages, scroll down just enough to show the start of the response
+        else {
+          // Find the last message element
+          const allMessages = thread.querySelectorAll('[id^="message-"]');
+          const lastMessageElement = allMessages[allMessages.length - 1];
+          
+          if (lastMessageElement) {
+            // Scroll to show just the top of the message
+            lastMessageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Indicate there's more to read
+            setUnreadCount(1);
+          }
+        }
+      }
     }
-  }, [messages, isTyping, atBottom]);
+  }, [messages, isTyping]);
+  
+  // Helper function to estimate message height based on content length
+  const estimateMessageHeight = (content: string): number => {
+    // Rough estimation: 
+    // - Average 50 chars per line
+    // - ~20px per line height
+    // - Add some margin for message container, avatars, etc.
+    const lines = Math.ceil(content.length / 50);
+    return lines * 20 + 60;
+  };
 
   // Initial scroll to bottom (with instant behavior)
   useEffect(() => {
@@ -99,18 +138,7 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
             onClick={() => scrollToBottom()}
             aria-label="Scroll to bottom"
           >
-            <span className="hidden sm:inline">
-              {unreadCount > 0 && messages[messages.length - 1]?.role === 'assistant' 
-                ? 'Continue reading response' 
-                : unreadCount > 0 
-                  ? `${unreadCount} new message${unreadCount > 1 ? 's' : ''}` 
-                  : 'New messages'}
-            </span>
-            {unreadCount > 0 && (
-              <span className="flex items-center justify-center h-5 w-5 sm:hidden text-xs bg-white text-purple-600 font-bold rounded-full">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
+            {/* Don't show any text, just the arrow icon */}
             <motion.div
               animate={{
                 scale: [1, 1.1, 1]

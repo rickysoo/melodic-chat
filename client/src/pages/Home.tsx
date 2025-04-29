@@ -150,16 +150,7 @@ export default function Home() {
     });
   }, [toast]);
 
-  // Only auto-scroll to bottom on user messages, not on assistant messages
-  useEffect(() => {
-    // Get the last message
-    const lastMessage = messages[messages.length - 1];
-    
-    // Only auto-scroll if it's the user's message or if typing indicator is shown
-    if ((lastMessage?.role === 'user' || isTyping) && messageEndRef.current) {
-      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isTyping]);
+  // No auto-scrolling needed here anymore as we handle it in the MessageThread component
 
   return (
     <div className={`h-screen flex flex-col bg-background text-foreground overflow-hidden ${isPwa ? 'pwa-mode' : ''}`}>

@@ -42,6 +42,7 @@ export default function MessageWithCopy({ message }: MessageProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={`flex items-start ${isUser ? 'justify-end max-w-xl ml-auto' : 'max-w-xl'} fade-in`}
+      id={`message-${message.id}`}
     >
       {!isUser && (
         <div className="flex-shrink-0 w-10 h-10 mr-2 flex items-center">
