@@ -26,17 +26,20 @@ export default function Header({ onClearChat }: HeaderProps) {
     setIntensity 
   } = useSounds();
   
-  // Monitor online/offline status
+  // Monitor online/offline status and custom events
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
+    const handleOpenSoundSettingsEvent = () => setIsSoundSettingsOpen(true);
     
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    document.addEventListener('open-sound-settings', handleOpenSoundSettingsEvent);
     
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('open-sound-settings', handleOpenSoundSettingsEvent);
     };
   }, []);
   
@@ -56,7 +59,7 @@ export default function Header({ onClearChat }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between shadow-sm">
+    <header className="bg-white border-b border-gray-200 py-4 px-6 flex items-center shadow-sm w-full">
       <div className="flex items-center space-x-3">
         <MelodicLogo size={32} />
         <span style={{ 
@@ -74,52 +77,24 @@ export default function Header({ onClearChat }: HeaderProps) {
         </span>
       </div>
       
-      <div className="flex items-center space-x-3">
-        {/* Sound Settings button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleOpenSoundSettings}
-          className={`text-gray-500 hover:text-gray-700 flex items-center ${settings.enabled ? 'text-purple-500' : ''}`}
-          title="Sound Settings"
-        >
-          <Music className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">Sounds</span>
-        </Button>
-        
-        {/* Clear chat button */}
-        {onClearChat && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearChat}
-            className="text-gray-500 hover:text-gray-700 flex items-center"
-            title="Clear chat history"
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Clear Chat</span>
-          </Button>
-        )}
-        
-        {/* Offline indicator for PWA mode */}
-        {isPwa && !isOnline && (
-          <div className="flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
-            <WifiOff className="w-3 h-3 mr-1" />
-            Offline
-          </div>
-        )}
-        
-        {/* Sound Settings Modal */}
-        <SoundSettingsModal
-          isOpen={isSoundSettingsOpen}
-          onClose={() => setIsSoundSettingsOpen(false)}
-          settings={settings}
-          onToggleSounds={toggleSounds}
-          onChangeTheme={changeTheme}
-          onAdjustVolume={adjustVolume}
-          onSetIntensity={setIntensity}
-        />
-      </div>
+      {/* Offline indicator for PWA mode */}
+      {isPwa && !isOnline && (
+        <div className="flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium ml-4">
+          <WifiOff className="w-3 h-3 mr-1" />
+          Offline
+        </div>
+      )}
+      
+      {/* Sound Settings Modal - moved outside of flex to avoid UI issues */}
+      <SoundSettingsModal
+        isOpen={isSoundSettingsOpen}
+        onClose={() => setIsSoundSettingsOpen(false)}
+        settings={settings}
+        onToggleSounds={toggleSounds}
+        onChangeTheme={changeTheme}
+        onAdjustVolume={adjustVolume}
+        onSetIntensity={setIntensity}
+      />
     </header>
   );
 }

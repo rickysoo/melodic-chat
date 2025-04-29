@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/useSounds";
 import { useIsMobile, useIsPwa } from "@/hooks/use-mobile";
 import { useAuth } from "@/lib/authContext";
+import { Button } from "@/components/ui/button";
+import { Trash2, Music } from "lucide-react";
 
 export default function Home() {
   // State hooks
@@ -22,7 +24,7 @@ export default function Home() {
   
   // Other hooks
   const { toast } = useToast();
-  const { playSound, unlockAudioContext } = useSounds();
+  const { playSound, unlockAudioContext, settings } = useSounds();
   const isMobile = useIsMobile();
   const isPwa = useIsPwa();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -160,8 +162,34 @@ export default function Home() {
       {/* Don't show header in PWA mode on mobile - header will be visible on larger screens */}
       {!(isPwa && isMobile) && (
         <div className="flex justify-between items-center">
-          <Header onClearChat={clearChatHistory} />
-          <UserAvatar onLogin={handleOpenLoginModal} />
+          <Header />
+          <div className="flex items-center space-x-2 px-6">
+            {/* Sound Settings button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => document.dispatchEvent(new Event('open-sound-settings'))}
+              className={`text-gray-500 hover:text-gray-700 flex items-center ${settings?.enabled ? 'text-purple-500' : ''}`}
+              title="Sound Settings"
+            >
+              <Music className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Sounds</span>
+            </Button>
+            
+            {/* Clear chat button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearChatHistory}
+              className="text-gray-500 hover:text-gray-700 flex items-center"
+              title="Clear chat history"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Clear Chat</span>
+            </Button>
+            
+            <UserAvatar onLogin={handleOpenLoginModal} />
+          </div>
         </div>
       )}
       
