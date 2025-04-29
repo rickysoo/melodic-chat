@@ -5,6 +5,7 @@ export interface ChatOptions {
   model?: string;
   systemPrompt?: string;
   sessionId?: string;
+  isAuthenticated?: boolean;
   conversationHistory?: Array<{
     role: 'user' | 'assistant';
     content: string;
@@ -14,14 +15,22 @@ export interface ChatOptions {
 // Maximum number of messages to include in the conversation history
 const MAX_CONVERSATION_HISTORY = 50;
 
-// Use OpenRouter's web search model to handle chat requests
+// Models for authenticated and non-authenticated users
+const AUTH_MODEL = "openai/gpt-4o-mini-search-preview"; // With web search capabilities
+const NON_AUTH_MODEL = "openai/gpt-4o-mini"; // Standard model without web search
+
+// Use OpenRouter to handle chat requests with different models based on authentication
 export async function generateChatResponse(options: ChatOptions) {
   const { 
     message, 
-    model = "openai/gpt-4o-mini-search-preview", 
+    model, 
     systemPrompt, 
-    conversationHistory 
+    conversationHistory,
+    isAuthenticated = false
   } = options;
+  
+  // Determine which model to use based on authentication status
+  const selectedModel = model || (isAuthenticated ? AUTH_MODEL : NON_AUTH_MODEL);
   
   const apiKey = process.env.OPENROUTER_API_KEY;
   
