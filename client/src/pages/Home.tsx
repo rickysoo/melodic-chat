@@ -188,15 +188,21 @@ export default function Home() {
         </div>
       )}
       
-      {/* Main chat container */}
+      {/* Main chat container with fixed input at bottom */}
       <main className={`flex-1 flex flex-col overflow-hidden relative ${isPwa && isMobile ? 'pt-2' : ''}`}>
         {/* Show web search banner for non-authenticated users */}
         {!authLoading && !isAuthenticated && <WebSearchBanner onLogin={handleOpenLoginModal} />}
         
-        <MessageThread messages={messages} isTyping={isTyping} />
-        <div ref={messageEndRef} />
+        {/* The message thread takes all available space but can scroll */}
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+          <MessageThread messages={messages} isTyping={isTyping} />
+          <div ref={messageEndRef} />
+        </div>
         
-        <ChatInput onSendMessage={handleSendMessage} disabled={isTyping} />
+        {/* Input area is fixed at the bottom */}
+        <div className="sticky bottom-0 z-10">
+          <ChatInput onSendMessage={handleSendMessage} disabled={isTyping} />
+        </div>
       </main>
       
       {/* PWA install prompt component - handles all installation UI */}

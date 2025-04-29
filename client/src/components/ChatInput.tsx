@@ -62,7 +62,7 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   // No search functionality needed anymore as OpenRouter has integrated search
 
   return (
-    <div className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 ${isMobile && isPwa ? 'pb-safe' : ''}`}>
+    <div className={`bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 ${isMobile && isPwa ? 'pb-safe' : ''} shadow-lg`}>
       <form onSubmit={handleSubmit} className="flex items-end space-x-2">
         <div className="flex-1 relative">
           <textarea 

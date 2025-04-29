@@ -85,10 +85,32 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
           const lastMessageElement = allMessages[allMessages.length - 1];
           
           if (lastMessageElement) {
-            // Scroll to show just the top of the message
-            lastMessageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Indicate there's more to read
-            setUnreadCount(1);
+            // Get the content area with the text
+            const contentArea = lastMessageElement.querySelector('.markdown-content');
+            if (contentArea) {
+              // Get the first paragraph element
+              const firstParagraph = contentArea.querySelector('p');
+              
+              if (firstParagraph) {
+                // Calculate the position to ensure first sentence (paragraph) is visible
+                // Get the element's position relative to the viewport
+                const rect = lastMessageElement.getBoundingClientRect();
+                const threadRect = thread.getBoundingClientRect();
+                
+                // Calculate where to scroll to show just the beginning of the message
+                // We add a small offset (-20) to show a bit more context
+                const scrollAmount = thread.scrollTop + (rect.top - threadRect.top) - 20;
+                
+                // Scroll to show the first sentence and leave room at the bottom for the input
+                thread.scrollTop = scrollAmount;
+              } else {
+                // Fallback if we can't find paragraphs - just show the message top
+                lastMessageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+              
+              // Indicate there's more to read
+              setUnreadCount(1);
+            }
           }
         }
       }
