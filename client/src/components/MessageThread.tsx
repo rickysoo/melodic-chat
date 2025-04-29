@@ -39,8 +39,14 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
   // Track new messages and update unread count
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
-      // If not at bottom, increment unread count
-      if (!atBottom) {
+      const lastMessage = messages[messages.length - 1];
+      
+      // Always increment unread count for assistant messages that are long
+      if (lastMessage?.role === 'assistant' && lastMessage.content.length > 300) {
+        setUnreadCount(prev => prev + 1);
+      }
+      // For other cases, only increment if not at bottom
+      else if (!atBottom) {
         const newCount = messages.length - prevMessagesLength.current;
         setUnreadCount(prev => prev + newCount);
       }
@@ -48,9 +54,12 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
     prevMessagesLength.current = messages.length;
   }, [messages, atBottom]);
 
-  // Scroll to bottom when new messages arrive
+  // Scroll to bottom only on user messages or typing indicators
   useEffect(() => {
-    if (atBottom) {
+    const lastMessage = messages[messages.length - 1];
+    
+    // Only scroll to bottom automatically for user messages or typing indicators
+    if (atBottom && (lastMessage?.role === 'user' || isTyping)) {
       scrollToBottom();
       // Reset unread count when at bottom
       setUnreadCount(0);
@@ -69,7 +78,8 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
     <div className="relative flex-1 flex flex-col h-full">
       {/* Scroll to bottom button - only shown when not at bottom */}
       <AnimatePresence>
-        {!atBottom && messages.length > 0 && (
+        {/* Show scroll indicator when not at bottom or when there's a long assistant message */}
+        {((!atBottom && messages.length > 0) || unreadCount > 0) && (
           <motion.button
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ 
@@ -85,25 +95,29 @@ export default function MessageThread({ messages, isTyping }: MessageThreadProps
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            className={`absolute bottom-6 right-6 z-10 p-3 ${unreadCount > 0 ? 'bg-red-500' : 'bg-primary'} text-white rounded-full shadow-xl flex items-center justify-center gap-2 font-medium border-2 border-white dark:border-gray-800 min-w-[42px] min-h-[42px]`}
+            className={`absolute bottom-6 right-6 z-10 p-3 ${unreadCount > 0 ? 'bg-purple-600' : 'bg-primary'} text-white rounded-full shadow-xl flex items-center justify-center gap-2 font-medium border-2 border-white dark:border-gray-800 min-w-[42px] min-h-[42px]`}
             onClick={() => scrollToBottom()}
             aria-label="Scroll to bottom"
           >
             <span className="hidden sm:inline">
-              {unreadCount > 0 ? `${unreadCount} new message${unreadCount > 1 ? 's' : ''}` : 'New messages'}
+              {unreadCount > 0 && messages[messages.length - 1]?.role === 'assistant' 
+                ? 'Continue reading response' 
+                : unreadCount > 0 
+                  ? `${unreadCount} new message${unreadCount > 1 ? 's' : ''}` 
+                  : 'New messages'}
             </span>
             {unreadCount > 0 && (
-              <span className="flex items-center justify-center h-5 w-5 sm:hidden text-xs bg-white text-red-500 font-bold rounded-full">
+              <span className="flex items-center justify-center h-5 w-5 sm:hidden text-xs bg-white text-purple-600 font-bold rounded-full">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
             <motion.div
               animate={{
-                scale: unreadCount > 0 ? [1, 1.1, 1] : 1
+                scale: [1, 1.1, 1]
               }}
               transition={{
                 duration: 1,
-                repeat: unreadCount > 0 ? Infinity : 0,
+                repeat: Infinity,
                 repeatType: "reverse"
               }}
             >

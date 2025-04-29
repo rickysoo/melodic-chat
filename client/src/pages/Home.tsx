@@ -150,9 +150,13 @@ export default function Home() {
     });
   }, [toast]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Only auto-scroll to bottom on user messages, not on assistant messages
   useEffect(() => {
-    if (messageEndRef.current) {
+    // Get the last message
+    const lastMessage = messages[messages.length - 1];
+    
+    // Only auto-scroll if it's the user's message or if typing indicator is shown
+    if ((lastMessage?.role === 'user' || isTyping) && messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping]);
