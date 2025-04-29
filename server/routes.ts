@@ -13,6 +13,7 @@ const chatRequestSchema = z.object({
   apiKey: z.string(),
   model: z.string().default("gpt-4o"),
   sessionId: z.string().optional(),
+  isAuthenticated: z.boolean().default(false), // New field to track authentication status
   conversationHistory: z.array(
     z.object({
       role: z.enum(['user', 'assistant']),
@@ -92,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid request data", errors: validation.error.errors });
       }
       
-      let { message, apiKey, model, sessionId, conversationHistory } = validation.data;
+      let { message, apiKey, model, sessionId, conversationHistory, isAuthenticated } = validation.data;
       
       // OpenRouter uses environment variable - we don't need the API key from client anymore
       // Keep this for backward compatibility with the client
@@ -109,14 +110,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Send request to OpenRouter with conversation history
+      // Determine model based on authentication status
       const response = await generateChatResponse({
         message,
-        model: "openai/gpt-4o-mini-search-preview", // Override with the OpenRouter model
         sessionId,
         conversationHistory,
-        systemPrompt: `You are Melodic, a helpful, creative, and musically-inclined AI assistant with real-time web search capabilities. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses.
+        isAuthenticated, // Pass authentication status to determine model access
+        systemPrompt: `You are Melodic, a helpful, creative, and musically-inclined AI assistant${isAuthenticated ? ' with real-time web search capabilities' : ''}. You have a cheerful, friendly personality and occasionally incorporate musical references into your responses.
 
-When searching for information online, cite your sources with numbered links at the end of your response.
+${isAuthenticated ? 'When searching for information online, cite your sources with numbered links at the end of your response.' : 'You do not have access to the internet or any ability to search the web. If asked about current events or any information that would require web search, politely explain that you can only provide general knowledge and cannot search for specific or recent information. Suggest that the user can log in to access web search features.'}
 
 Format your responses with proper markdown:
 - Use **bold** for emphasis and section headings

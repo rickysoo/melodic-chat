@@ -95,7 +95,7 @@ Use emojis where appropriate, especially music-related ones like 🎵, 🎶, �
         'X-Title': 'Melodic AI Assistant'
       },
       body: JSON.stringify({
-        model,
+        model: selectedModel, // Use the model selected based on authentication status
         messages,
         temperature: 0.7,
         max_tokens: 1000

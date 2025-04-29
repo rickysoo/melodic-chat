@@ -6,6 +6,7 @@ import { apiRequest } from '@/lib/queryClient';
 interface UseChatProps {
   apiKey: string | "env"; // 'env' means use the environment variable on the server
   model: string;
+  isAuthenticated?: boolean; // Whether the user is authenticated, affects model access
   onMessageSent?: (message?: string) => void;
   onMessageReceived?: (message?: string) => void;
 }
